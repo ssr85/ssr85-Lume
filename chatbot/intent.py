@@ -36,9 +36,15 @@ def detect_intent(message: str) -> str:
     """Detects user intent via LLM with keyword fallback."""
     msg = message.lower()
     
-    # Priority keywords for Agency (Query)
-    if any(kw in msg for kw in ["create", "add", "set", "update", "total", "calculate"]):
+    # Aggressive Agency Routing: Force into Agency Core if mutation keywords OR potential names are detected
+    mutation_keywords = ["create", "add", "set", "update", "total", "calculate", "new", "record"]
+    if any(kw in msg for kw in mutation_keywords):
         return "QUERY"
+        
+    # Heuristic for Names (Capitalized words in a short sentence)
+    words = message.split()
+    if len(words) < 15 and any(w[0].isupper() for w in words[1:]): # Basic name detection
+         return "QUERY"
 
     # Try LLM
     intent = call_llm(INTENT_PROMPT.format(message=message))
