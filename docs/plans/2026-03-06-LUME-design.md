@@ -62,7 +62,20 @@ The store is organized by **ClientID (Primary Key)** to ensure every client is u
       },
       "created_at": "2026-03-06T10:00:00",
       "projects": [],
-      "proposals": [],
+      "proposals": [
+        {
+          "proposal_id": "prop-001",
+          "project_title": "Social Media Campaign",
+          "project_description": "3-week social media campaign",
+          "deliverables": "Logo, Brand Guidelines, 5 Post Templates",
+          "timeline": "3 weeks",
+          "budget": "$1500",
+          "freelancer_background": "5 years experience in social branding",
+          "content": "...",
+          "created_at": "2026-03-06T10:05:00",
+          "file_path": "documents/proposals/peakform-social-proposal.pdf"
+        }
+      ],
       "invoices": [
         {
           "invoice_number": "INV-1001",
@@ -96,8 +109,8 @@ The store is organized by **ClientID (Primary Key)** to ensure every client is u
 - **Proposal Generation:** Creates Introduction, Project Understanding, Approach, Deliverables, Timeline, Pricing, Terms, and Closing. Generates both PDF and .docx.
     - **New:** Automatically creates a new client record if the client name is not found in the database.
     - **Conversational Editing:** After a proposal is generated, the user can provide natural language instructions (e.g., *"Make the intro more excited"* or *"Add a 20% upfront payment term"*). The bot uses the LLM to update the draft and regenerates the `.docx` and `PDF` files immediately.
-- **Invoice Generation:** Calculates subtotal, tax, and total. Auto-increments invoice numbers. Generates PDF. **New:** Manages part-payments (paid/pending) and creates client records for new clients.
-- **Payment Reminders:** Detects overdue duration (Gentle/Firm/Urgent) and drafts an email. Sends via Gmail upon confirmation. Automatically updates with the current pending balance.
+- **Invoice Generation:** Calculates subtotal, tax, and total. Auto-increments invoice numbers. Generates PDF. **New:** Manages part-payments (paid/pending) and creates client records for new clients. Includes "City, Country" address and "NOTES:" section.
+- **Payment Reminders:** Detects overdue duration (Gentle/Firm/Urgent) and drafts an email. Sends via Gmail upon confirmation. Automatically updates with the current pending balance. Includes total amount, total paid, and total pending.
 
 ---
 

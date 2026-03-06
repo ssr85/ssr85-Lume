@@ -18,9 +18,9 @@ When the intent is `INVOICE`, the chatbot collects work details through conversa
 | Work Items | Description of each item or milestone | Yes |
 | Hours per Item | Hours logged per line item | Yes |
 | Rate | Hourly rate or fixed fee per item | Yes |
-| Freelancer Payment Details | Bank or payment method info | Yes |
+| Freelancer Bank / Payment Details | How the client should pay | Yes |
 | Tax / GST | Tax percentage if applicable | Optional |
-| Notes | Additional message on the invoice | Optional |
+| Notes | Any additional message to the client on the invoice | Optional |
 
 ---
 
@@ -130,7 +130,7 @@ Generated using **ReportLab**. The invoice must include:
 |  PAYMENT DETAILS                                      |
 |  [Bank name, account number, or payment link]         |
 |                                                       |
-|  [Notes if any]                                       |
+|  NOTES: [Any additional message to the client]        |
 +-------------------------------------------------------+
 ```
 

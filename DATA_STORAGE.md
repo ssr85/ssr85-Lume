@@ -45,7 +45,12 @@ The entire data store is structured around clients. Each client contains their p
       "proposals": [
         {
           "proposal_id": "prop-001",
-          "project_name": "Social Media Campaign",
+          "project_title": "Social Media Campaign",
+          "project_description": "3-week social media campaign",
+          "deliverables": "Logo, Brand Guidelines, 5 Post Templates",
+          "timeline": "3 weeks",
+          "budget": "$1500",
+          "freelancer_background": "5 years experience in social branding",
           "content": "...",
           "created_at": "2026-02-01T10:05:00",
           "file_path": "documents/proposals/peakform-social-proposal.pdf"

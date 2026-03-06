@@ -47,7 +47,7 @@ EXTRACT_PROMPT = """
 Extract the following fields from this message if present.
 Return as JSON. Use null for missing fields.
 
-Fields: client_name, project_title, project_description, deliverables, timeline, budget, freelancer_name
+Fields: client_name, project_title, project_description, deliverables, timeline, budget, freelancer_name, freelancer_background
 
 Message: "{message}"
 """
@@ -134,8 +134,13 @@ After generation:
 
 ```python
 storage.save_proposal({
-    "client_name": client_name,
+    "client_id": client_id,
     "project_title": project_title,
+    "project_description": project_description,
+    "deliverables": deliverables,
+    "timeline": timeline,
+    "budget": budget,
+    "freelancer_background": freelancer_background,
     "content": proposal_text,
     "created_at": datetime.now().isoformat(),
     "file_path": pdf_path

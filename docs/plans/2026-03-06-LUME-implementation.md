@@ -131,7 +131,7 @@ Mocks OpenAI response and verify intent labels.
 
 **Step 3: Implement chatbot/intent.py**
 Implement `detect_intent` and `extract_fields` using the `call_llm` wrapper.
-- **Optional Logic:** Update `extract_fields` to look for `gstin` and `phone_number`.
+- **Optional Logic:** Update `extract_fields` to look for `gstin`, `phone_number`, and `freelancer_background`.
 - **Requirement:** Implement `keyword_detect` fallback logic (as per design) to handle cases where LLM is unavailable.
 - **Conversational Cue:** If `gstin` or `phone_number` are missing, set a flag in `session_state` to trigger the bot to ask the user if they'd like to provide them.
 
@@ -156,7 +156,7 @@ Conversation flow for proposals and document creation.
 - Create: `documents/docx_generator.py`
 
 **Step 1: Implement storage helpers for proposals**
-Add `save_proposal(client_id, proposal_data)` and `save_project(client_id, project_data)` to `storage/db.py`.
+Add `save_proposal(client_id, proposal_metadata, content)` and `save_project(client_id, project_data)` to `storage/db.py`. Ensure metadata includes `budget`, `timeline`, `deliverables`, and `background`.
 
 **Step 2: Implement PDF & Word generators**
 Build templates for ReportLab (PDF) and python-docx (Word).
@@ -203,6 +203,7 @@ Handle numbering, status management, and **recording part-payments**.
 - **Requirement:** Set default status to `UNPAID`.
 - **Requirement:** After auto-generating an invoice number, ask the user for confirmation or if they'd like to provide a custom one.
 - **Optional Fields:** Ensure the invoice PDF layout includes placeholders for GSTIN and Phone Number if provided. But if not provided, do not mention either of them on the invoice.
+- **Layout Requirement:** The PDF must include "City, Country" address lines and a clearly labeled "NOTES:" section. Rename "Freelancer Payment Details" to "Freelancer Bank / Payment Details".
 
 **Step 3: Update storage logic for payments**
 Add a helper to record a payment: `add_payment(invoice_number, amount, method)`.
