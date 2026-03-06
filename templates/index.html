@@ -36,6 +36,14 @@
                 <div class="chat-header">
                     <h2>Agency Chat</h2>
                 </div>
+
+                <!-- Floating Progress Bar -->
+                <div id="progress-container" class="progress-pill hidden">
+                    <div class="progress-label">LUME is processing...</div>
+                    <div class="progress-track">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
                 <div id="chat-window">
                     <!-- Chat bubbles will go here -->
                 </div>
@@ -64,6 +72,26 @@
             <div class="modal-actions">
                 <button id="cancel-delete-btn" class="action-btn">Cancel</button>
                 <button id="confirm-delete-btn" class="action-btn danger-btn" disabled>Confirm Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Preview Modal -->
+    <div id="preview-modal" class="modal-overlay hidden">
+        <div class="modal-content preview-content block-panel">
+            <div class="modal-header border-b border-card-border pb-4 mb-4 flex justify-between items-center">
+                <h3 class="modal-title m-0" style="color: var(--text-main); font-size: 1.2rem;">Document Preview</h3>
+                <button id="close-preview-btn" class="icon-btn" style="font-size: 1.2rem;">✕</button>
+            </div>
+            <div class="preview-body flex-1 overflow-hidden rounded-lg bg-black/20">
+                <iframe id="pdf-viewer" class="w-full h-full border-none" src=""></iframe>
+            </div>
+            <div class="modal-footer pt-4 mt-4 flex justify-end gap-4">
+                <button id="send-to-client-btn" class="action-btn text-center"
+                    style="padding: 0.6rem 1.2rem; background: rgba(74, 114, 255, 0.2); border: 1px solid rgba(74, 114, 255, 0.4);">Send
+                    to Client</button>
+                <a id="download-preview-btn" href="#" download class="action-btn text-center"
+                    style="padding: 0.6rem 1.2rem;">Download</a>
             </div>
         </div>
     </div>

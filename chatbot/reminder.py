@@ -73,5 +73,5 @@ def reminder_handler(message: str, session: dict):
     
     return (
         f"### Reminder Draft ({tone.capitalize()} Tone)\n\n{draft}\n\n"
-        f"**Shall I send this to {client['email']}?** (Reply 'Yes' to send)"
+        f"**Please review the email draft above.** Shall I send this to {client['email']}? (Reply 'Yes' to confirm and send)"
     )

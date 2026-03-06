@@ -41,6 +41,12 @@ def get_thread(thread_id: str) -> dict:
     data = load_chats()
     return data["threads"].get(thread_id)
 
+def delete_thread(thread_id: str):
+    data = load_chats()
+    if thread_id in data["threads"]:
+        del data["threads"][thread_id]
+        save_chats(data)
+
 def get_all_threads() -> list:
     data = load_chats()
     threads = list(data["threads"].values())

@@ -96,14 +96,23 @@ def invoice_handler(message: str, session: dict):
     
     db.save_invoice(client_id, invoice_record)
     
+    # Store Attachment Info for UI
+    session["last_attachments"] = [{
+        "name": f"Invoice_{invoice_num}.pdf",
+        "url": f"/docs/invoices/{invoice_num}.pdf",
+        "type": "pdf"
+    }]
+    
     # Generate PDF (Staging)
     pdf_path = f"documents/invoices/{invoice_num}.pdf"
     # generate_invoice_pdf(invoice_record, pdf_path) # Would call pdf_generator
     
     return (
-        f"✅ **Invoice {invoice_num} Created!**\n\n"
+        f"### Invoice Draft {invoice_num} (For Your Review)\n\n"
         f"**Client:** {client_name}\n"
         f"**Amount Due:** ${calc['grand_total']}\n"
         f"**Due Date:** {due_date}\n\n"
-        f"You can download it here: [**Download PDF**](/docs/invoices/{invoice_num}.pdf)"
+        "--- \n"
+        "**Please review the generated invoice.**\n\n"
+        f"Preview: [**Open PDF Preview**](/docs/invoices/{invoice_num}.pdf)"
     )

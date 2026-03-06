@@ -75,7 +75,18 @@ async def chat(request: Request):
     raw_db = db.get_raw_database()
     stats = calculate_stats(raw_db)
         
-    return {"reply": reply, "stats": stats}
+    response_data = {
+        "reply": reply, 
+        "stats": stats, 
+        "thread_id": thread_id,
+        "attachments": session.get("last_attachments", [])
+    }
+    
+    # Clear attachments after sending
+    if "last_attachments" in session:
+        del session["last_attachments"]
+        
+    return response_data
 
 class DeleteRequest(BaseModel):
     target_name: str
@@ -101,6 +112,11 @@ async def get_chat_thread(thread_id: str):
     if thread:
         return {"status": "success", "thread": thread}
     return {"status": "error", "message": "Thread not found"}
+
+@app.delete("/api/chats/{thread_id}")
+async def delete_chat_thread(thread_id: str):
+    chats.delete_thread(thread_id)
+    return {"status": "success"}
 
 if __name__ == "__main__":
     import uvicorn

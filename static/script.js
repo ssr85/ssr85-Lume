@@ -16,6 +16,12 @@ const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
 const deleteTargetNameDisplay = document.getElementById('delete-target-name');
 const deleteEntityType = document.getElementById('delete-entity-type');
 
+// Preview Modal Elements
+const previewModal = document.getElementById('preview-modal');
+const pdfViewer = document.getElementById('pdf-viewer');
+const closePreviewBtn = document.getElementById('close-preview-btn');
+const downloadPreviewBtn = document.getElementById('download-preview-btn');
+
 async function loadChatHistory() {
     try {
         const res = await fetch('/api/chats');
@@ -26,10 +32,15 @@ async function loadChatHistory() {
             data.threads.forEach(t => {
                 const div = document.createElement('div');
                 div.className = `history-item ${t.id === currentThreadId ? 'active' : ''}`;
-                div.onclick = () => selectThread(t.id);
-
-                const date = new Date(t.updated_at).toLocaleDateString();
-                div.innerHTML = `<div class="history-date">${date}</div><div class="history-title">${t.title}</div>`;
+                div.innerHTML = `
+                    <div class="history-info" onclick="selectThread('${t.id}')">
+                        <div class="history-date">${date}</div>
+                        <div class="history-title">${t.title}</div>
+                    </div>
+                    <button class="delete-thread-btn" onclick="event.stopPropagation(); deleteThread('${t.id}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
+                    </button>
+                `;
                 historyList.appendChild(div);
             });
         }
@@ -60,6 +71,24 @@ async function selectThread(id) {
     }
 }
 
+async function deleteThread(id) {
+    if (!confirm("Are you sure you want to delete this conversation?")) return;
+
+    try {
+        const res = await fetch(`/api/chats/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.status === 'success') {
+            if (currentThreadId === id) {
+                newChatBtn.click();
+            } else {
+                loadChatHistory();
+            }
+        }
+    } catch (e) {
+        console.error("Error deleting thread", e);
+    }
+}
+
 newChatBtn.addEventListener('click', () => {
     currentThreadId = null;
     chatWindow.innerHTML = '';
@@ -74,6 +103,14 @@ async function sendMessage() {
     userInput.value = '';
     appendMessage('user', message);
 
+    // Show Progress Bar
+    const progressContainer = document.getElementById('progress-container');
+    const progressFill = document.getElementById('progress-fill');
+
+    progressContainer.classList.remove('hidden');
+    progressFill.style.transition = 'width 3s cubic-bezier(0.1, 0.5, 0.3, 1)';
+    progressFill.style.width = '90%';
+
     try {
         const response = await fetch('/chat', {
             method: 'POST',
@@ -81,7 +118,23 @@ async function sendMessage() {
             body: JSON.stringify({ message, thread_id: currentThreadId })
         });
         const data = await response.json();
+
+        // Complete Progress
+        progressFill.style.transition = 'width 0.3s ease-out';
+        progressFill.style.width = '100%';
+        setTimeout(() => {
+            progressContainer.classList.add('hidden');
+            progressFill.style.width = '0%';
+        }, 400);
+
+        // Result Handling
         let botReply = data.reply;
+        const attachments = data.attachments || [];
+
+        // Update currentThreadId if this was a new chat
+        if (data.thread_id && !currentThreadId) {
+            currentThreadId = data.thread_id;
+        }
 
         const deleteModalMatch = botReply.match(/\[ACTION:DELETE_MODAL:(.+?)\]/);
         if (deleteModalMatch) {
@@ -90,10 +143,8 @@ async function sendMessage() {
                 pendingDeleteTarget = modalData.name;
                 pendingDeleteType = modalData.type;
 
-                // Remove the action block from visible message
                 botReply = botReply.replace(deleteModalMatch[0], '').trim();
 
-                // Setup and show modal
                 deleteTargetNameDisplay.textContent = pendingDeleteTarget;
                 deleteEntityType.textContent = pendingDeleteType;
                 deleteVerifyInput.value = '';
@@ -104,12 +155,11 @@ async function sendMessage() {
             }
         }
 
-        appendMessage('bot', botReply);
-
-        // Refresh sidebar so new chat gets a title/date
+        appendMessage('bot', botReply, false, attachments);
         loadChatHistory();
 
     } catch (err) {
+        console.error("Chat error:", err);
         appendMessage('bot', "System error. Intelligence link severed. Reconnecting...");
     }
 }
@@ -119,19 +169,55 @@ function quickCommand(cmd) {
     sendMessage();
 }
 
-function appendMessage(role, text, skipAnimation = false) {
+function appendMessage(role, text, skipAnimation = false, attachments = []) {
     const card = document.createElement('div');
     card.className = `editorial-card ${role}-card`;
 
-    // We create an interior div for the text to ensure our custom formatting
-    // doesn't clobber the card's structure if we later add avatars, etc.
     const textContent = document.createElement('div');
     textContent.className = 'message-content';
     textContent.innerHTML = formatMarkdown(text);
 
     card.appendChild(textContent);
-
     chatWindow.appendChild(card);
+
+    // Render attachments if any
+    if (attachments && attachments.length > 0) {
+        const attachContainer = document.createElement('div');
+        attachContainer.className = 'attachment-container';
+
+        attachments.forEach(file => {
+            const thumb = document.createElement('div');
+            thumb.className = 'file-thumbnail';
+            thumb.innerHTML = `
+                <div class="file-icon-wrapper">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                </div>
+                <div class="file-info">
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-meta">${file.type.toUpperCase()} • View</span>
+                </div>
+                <div class="file-actions">
+                    <button class="thumb-btn view-btn">Quick View</button>
+                    <a href="${file.url}" download class="thumb-btn">Download</a>
+                </div>
+            `;
+
+            thumb.addEventListener('click', () => openPreview(file.url, file.name));
+            thumb.querySelector('.view-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                openPreview(file.url, file.name);
+            });
+
+            attachContainer.appendChild(thumb);
+        });
+        chatWindow.appendChild(attachContainer);
+    }
+
     chatWindow.scrollTop = chatWindow.scrollHeight;
 
     if (!skipAnimation && window.gsap) {
@@ -141,6 +227,7 @@ function appendMessage(role, text, skipAnimation = false) {
 
 function formatMarkdown(text) {
     return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="chat-link" target="_blank">$1</a>')
         .replace(/### (.*?)\n/g, '<h3 style="font-family: var(--headline-serif); margin:1rem 0 0.5rem 0;">$1</h3>')
         .replace(/\n/g, '<br>');
 }
@@ -192,6 +279,39 @@ confirmDeleteBtn.addEventListener('click', async () => {
         appendMessage("bot", `❌ System error during deletion.`);
     }
     pendingDeleteTarget = null;
+});
+
+// PDF Preview Interceptor (Event Delegation)
+chatWindow.addEventListener('click', (e) => {
+    const link = e.target.closest('.chat-link');
+    if (link && link.getAttribute('href').endsWith('.pdf')) {
+        e.preventDefault();
+        const url = link.getAttribute('href');
+
+        pdfViewer.src = url;
+        downloadPreviewBtn.href = url;
+        previewModal.classList.remove('hidden');
+    }
+});
+
+const sendToClientBtn = document.getElementById('send-to-client-btn');
+
+sendToClientBtn.addEventListener('click', () => {
+    alert("This feature is temporarily on hold. LUME requires explicit confirmation before sending documents to clients. Please review the document once more before this capability is enabled.");
+});
+
+closePreviewBtn.addEventListener('click', () => {
+    previewModal.classList.add('hidden');
+    pdfViewer.src = '';
+});
+
+// Close modals on escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        previewModal.classList.add('hidden');
+        deleteModal.classList.add('hidden');
+        pdfViewer.src = '';
+    }
 });
 
 window.quickCommand = quickCommand;

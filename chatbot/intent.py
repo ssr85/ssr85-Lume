@@ -17,6 +17,8 @@ EXTRACT_PROMPT = """
 Extract fields from the user message for a {intent} task.
 Return as a JSON object. Use null if not found.
 
+Be proactive: if a piece of information can serve multiple fields (e.g. "Logo Design" is both a title and a description), use it for both.
+
 Fields to extract:
 - For PROPOSAL: client_name, project_title, project_description, deliverables, timeline, budget, freelancer_background
 - For INVOICE: client_name, project_name, work_items, hours, rate, gstin, phone_number

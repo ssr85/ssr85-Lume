@@ -128,10 +128,17 @@ def proposal_handler(message: str, session: dict):
         file_path=pdf_path
     )
     
+    # Store Attachment Info for UI
+    session["last_attachments"] = [{
+        "name": pdf_filename,
+        "url": f"/docs/proposals/{pdf_filename}",
+        "type": "pdf"
+    }]
+    
     # Return preview with real links (simulated for now with /docs path)
     return (
-        f"### Proposal Preview\n\n{session['draft_content']}\n\n"
+        f"### Proposal Draft (For Your Review)\n\n{session['draft_content']}\n\n"
         "--- \n"
-        "**Would you like to refine anything in the draft?** (e.g., 'Make it more technical', 'Add 20% upfront payment term')\n\n"
-        f"Otherwise, you can download it as [**PDF**](/docs/proposals/{pdf_filename}) or [**Word**](/docs/proposals/{docx_filename})."
+        "**Please review the draft above.** You can ask me to refine it (e.g., 'Make it more technical') or download the files below.\n\n"
+        f"Preview: [**Open PDF Preview**](/docs/proposals/{pdf_filename}) | [Download Word](/docs/proposals/{docx_filename})"
     )
