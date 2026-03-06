@@ -70,6 +70,19 @@
         </nav>
     </div>
 
+    <div id="delete-modal" class="modal-overlay hidden">
+        <div class="modal-content bento-card">
+            <h3 class="modal-title">Delete <span id="delete-entity-type">Contact</span></h3>
+            <p class="modal-desc">This action cannot be undone. All associated records will be permanently deleted.</p>
+            <label class="modal-label">To verify, type <strong id="delete-target-name"></strong> below:</label>
+            <input type="text" id="delete-verify-input" class="modal-input" autocomplete="off">
+            <div class="modal-actions">
+                <button id="cancel-delete-btn" class="action-btn">Cancel</button>
+                <button id="confirm-delete-btn" class="action-btn danger-btn" disabled>Confirm Delete</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/script.js"></script>
 </body>
 

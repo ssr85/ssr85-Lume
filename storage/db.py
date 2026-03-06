@@ -180,6 +180,22 @@ def update_project_status(client_id: str, title: str, status: str):
                 return True
     return False
 
+def delete_client_by_name(name: str) -> bool:
+    """Deletes a client and all associated records (projects, invoices) by name."""
+    db_data = load_db()
+    
+    client_id_to_delete = None
+    for cid, client in db_data["clients"].items():
+        if client["name"].lower() == name.lower():
+            client_id_to_delete = cid
+            break
+            
+    if client_id_to_delete:
+        del db_data["clients"][client_id_to_delete]
+        save_db(db_data)
+        return True
+    return False
+
 def get_raw_database() -> dict:
     """Returns the entire database dictionary."""
     return load_db()

@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
@@ -66,6 +67,20 @@ async def chat(request: Request):
     stats = calculate_stats(raw_db)
         
     return {"reply": reply, "stats": stats}
+
+class DeleteRequest(BaseModel):
+    target_name: str
+    entity_type: str
+
+@app.post("/api/delete-entity")
+async def delete_entity(req: DeleteRequest):
+    if req.entity_type == "client":
+        success = db.delete_client_by_name(req.target_name)
+        if success:
+            return {"status": "success", "message": f"Client {req.target_name} deleted."}
+        else:
+            return {"status": "error", "message": f"Client {req.target_name} not found."}
+    return {"status": "error", "message": "Unknown entity type."}
 
 if __name__ == "__main__":
     import uvicorn

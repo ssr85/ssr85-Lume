@@ -23,9 +23,13 @@ MANDATES (STRICT):
 
 Actions Available:
 - {{ "action": "CREATE_CLIENT", "name": "Name" }}
+- {{ "action": "REQUEST_DELETE_CLIENT", "name": "Name" }}
 - {{ "action": "UPDATE_FIELD", "client_id": "ID", "field": "address.city", "value": "val" }}
 - {{ "action": "RECORD_PAYMENT", "invoice_num": "INV-X", "amount": 0.0, "method": "Transfer" }}
 - {{ "action": "LOG_PROJECT", "client_id": "ID", "title": "X", "description": "Y" }}
+
+SPECIAL RULE FOR DELETION:
+- If the user asks to delete a contact or project, do NOT act immediately. You MUST respond with this exact block at the very end of your message so the frontend can intercept it: [ACTION:DELETE_MODAL:{{"name":"Contact Name", "type":"client"}}]
 
 User Question: "{message}"
 """
@@ -42,9 +46,14 @@ def query_handler(message: str, session: dict):
             action_data = json.loads(json_str)
             action = action_data.get("action")
             
+            import re
+            clean_text = response.split("{")[0].strip()
+            clean_text = re.sub(r'(?i)executing:\s*$', '', clean_text).strip()
+            clean_text = re.sub(r'(?i)action:\s*$', '', clean_text).strip()
+            
             if action == "CREATE_CLIENT":
                 cid = db.get_or_create_client(name=action_data.get("name"))
-                response = f"✅ Created client record ({cid}). \n\n" + response.split("{")[0]
+                response = f"✅ Created client record ({cid}). \n\n" + clean_text
             
             elif action == "RECORD_PAYMENT":
                 db.add_payment(
@@ -52,14 +61,14 @@ def query_handler(message: str, session: dict):
                     float(action_data.get("amount")),
                     action_data.get("method", "Unknown")
                 )
-                response = f"✅ Payment recorded. \n\n" + response.split("{")[0]
+                response = f"✅ Payment recorded. \n\n" + clean_text
             
             elif action == "LOG_PROJECT":
                 db.log_project(action_data.get("client_id"), {
                     "title": action_data.get("title"),
                     "description": action_data.get("description")
                 })
-                response = f"✅ Project logged. \n\n" + response.split("{")[0]
+                response = f"✅ Project logged. \n\n" + clean_text
                 
             elif action == "UPDATE_FIELD":
                 db.update_client_field(
@@ -67,14 +76,14 @@ def query_handler(message: str, session: dict):
                     action_data.get("field"),
                     action_data.get("value")
                 )
-                response = "✅ Field updated. \n\n" + response.split("{")[0]
+                response = "✅ Field updated. \n\n" + clean_text
                 
             elif action == "UPDATE_INVOICE_STATUS":
                 db.update_invoice_status(
                     action_data.get("invoice_num"),
                     action_data.get("status")
                 )
-                response = "✅ Invoice status updated. \n\n" + response.split("{")[0]
+                response = "✅ Invoice status updated. \n\n" + clean_text
 
             elif action == "UPDATE_PROJECT_STATUS":
                 db.update_project_status(
@@ -82,12 +91,16 @@ def query_handler(message: str, session: dict):
                     action_data.get("title"),
                     action_data.get("status")
                 )
-                response = "✅ Project status updated. \n\n" + response.split("{")[0]
+                response = "✅ Project status updated. \n\n" + clean_text
 
         except Exception as e:
             print(f"Agency Dispatch Error: {e}")
             
-    return response.split("{")[0].strip()
+    import re
+    final_text = response.split("{")[0].strip()
+    final_text = re.sub(r'(?i)executing:\s*$', '', final_text).strip()
+    final_text = re.sub(r'(?i)action:\s*$', '', final_text).strip()
+    return final_text
 
 def calculate_stats(db_data: dict) -> dict:
     """Calculates high-level business stats for the Bento UI."""

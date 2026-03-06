@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>LUME Dashboard</title>
+    <!-- Tailwind CSS v3 with plugins -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts: Playfair Display (Serif) & Inter (Sans-serif) -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Playfair+Display:wght@400;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind Config to extend theme -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                    },
+                    colors: {
+                        cream: {
+                            50: '#fdfbf7',
+                            100: '#f8f4ec',
+                            200: '#f0e6d6',
+                        },
+                        lume: {
+                            blue: '#e0f2fe',
+                            darkblue: '#0c4a6e',
+                            gradientStart: '#e0f2fe',
+                            gradientEnd: '#bae6fd',
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 20px 40px -5px rgba(0, 0, 0, 0.05)',
+                        'neumorphic': '8px 8px 16px #e6e3dd, -8px -8px 16px #ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom CSS for specific effects -->
+    <style data-purpose="custom-utilities">
+        body {
+            background-color: #FAF9F6;
+            /* Light warm off-white */
+        }
+
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* Gradient Text */
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-image: linear-gradient(to right, #0c4a6e, #0284c7);
+        }
+    </style>
+</head>
+
+<body class="font-sans text-slate-700 min-h-screen flex flex-col" style="background-color: #FDFBF7;">
+    <!-- BEGIN: TopNavigationBar -->
+    <header
+        class="w-full px-6 py-4 flex items-center justify-between bg-cream-50/80 sticky top-0 z-50 backdrop-blur-md border-b border-cream-200/50"
+        data-purpose="top-nav">
+        <!-- Left: Logo -->
+        <div class="flex-shrink-0 w-48">
+            <h1 class="font-serif text-3xl font-bold tracking-wide text-slate-900">LUME</h1>
+        </div>
+        <!-- Center: Navigation Links -->
+        <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
+            <a class="flex items-center gap-2 hover:text-slate-900 transition-colors font-sans text-slate-600" href="#">
+                <span class="material-symbols-outlined text-[20px]">home</span>
+                <span class="hidden lg:inline">Home</span>
+            </a>
+            <a class="flex items-center gap-2 hover:text-slate-900 transition-colors font-sans text-slate-600" href="#">
+                <span class="material-symbols-outlined text-[20px]">folder</span>
+                <span>Projects</span>
+            </a>
+            <a class="flex items-center gap-2 hover:text-slate-900 transition-colors font-sans text-slate-600" href="#">
+                <span class="material-symbols-outlined text-[20px]">group</span>
+                <span>Clients</span>
+            </a>
+            <a class="flex items-center gap-2 hover:text-slate-900 transition-colors font-sans text-slate-600" href="#">
+                <span class="material-symbols-outlined text-[20px]">settings</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+        <!-- Right: Actions -->
+        <div class="flex-shrink-0 w-48 flex items-center justify-end space-x-4">
+            <button aria-label="Settings" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <span class="material-symbols-outlined">settings</span>
+            </button>
+            <button
+                class="bg-blue-100 text-slate-700 text-sm font-medium px-5 py-2 rounded-lg hover:bg-blue-200 transition-colors shadow-sm">
+                Dashboard
+            </button>
+        </div>
+    </header>
+    <!-- END: TopNavigationBar -->
+    <!-- BEGIN: MainContentArea -->
+    <main class="flex-grow p-6 md:p-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- BEGIN: LeftColumn (Chat Interface) -->
+        <section class="lg:col-span-2 h-[600px] flex flex-col bg-white rounded-3xl shadow-soft overflow-hidden"
+            data-purpose="chat-interface">
+            <!-- Chat Header -->
+            <div class="px-6 py-4 bg-gradient-to-r from-lume-gradientStart to-white border-b border-blue-50">
+                <div class="px-6 py-4 bg-gradient-to-r from-[#89C4F4] to-[#B0DAF9] border-b border-blue-200/50">
+                    <h2 class="font-serif text-xl font-normal text-white drop-shadow-sm">Agency Chat</h2>
+                </div>
+            </div>
+            <!-- Chat Area -->
+            <div id="chat-messages-container" class="flex-grow p-6 space-y-6 overflow-y-auto bg-white"
+                data-purpose="chat-messages" style="background: linear-gradient(135deg, #f0f8ff 0%, #fff0f5 100%);">
+                <!-- User Message -->
+                <div class="flex justify-end">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-slate-400 font-medium mr-2">You</span>
+                        <div
+                            class="bg-[#89C4F4] text-white rounded-2xl px-5 py-3 max-w-md shadow-sm text-sm leading-relaxed bg-blue-100 text-slate-800">
+                            <p>Would you like to draft your proposal?</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- AI Response -->
+                <div class="flex items-start space-x-3 mt-4">
+                    <!-- LUME AI Avatar -->
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden border border-slate-100 shadow-sm">
+                        <img alt="LUME AI" class="w-full h-full object-cover rounded-full"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDT5GdAZX3jZumBqjXx6KOH-QeXM6d6w-wZVE4hMGfhVjl1VQRSg32cn5ykAGwP4cjz9jVtyQ_NMnf1siiC0oAdcEzaVXHqHQE4d9f4YYtFoKX_LakOwUS6lrGA8d3PTtWwA-SxnElmbz_sGgXrUKVmwjbuv9O4WgsLkCAI10pH62OqJ-WdV1-LKXrnRU0qpraKfNN217SDZJyUPt7zFeKa4U_yKQPDrPbwR0y8PMPQe1o1tSaHOIZgI-Z4LE3k7jvALEO0jgv5ramF" />
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs text-slate-400 font-medium ml-1 mb-1">LUME</span>
+                        <div
+                            class="bg-white border border-slate-100 text-slate-700 rounded-2xl rounded-tl-none px-5 py-4 max-w-lg shadow-sm text-sm leading-relaxed">
+                            <p>I've analyzed the latest client feedback. It seems the new proposal structure is
+                                well-received. Would you like me to draft the upcoming proposal for the <span
+                                    class="font-semibold text-slate-900">Patel account</span> using the new template?
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Input Area -->
+            <div class="p-6 border-t border-slate-50 bg-white">
+                <div class="relative">
+                    <input id="chat-input"
+                        class="w-full pl-5 pr-12 py-3 rounded-full bg-slate-50 border-none focus:ring-2 focus:ring-blue-100 placeholder-slate-400 text-sm shadow-inner"
+                        placeholder="Enter command..." type="text" />
+                    <button id="send-btn"
+                        class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-white rounded-full text-blue-500 shadow-sm hover:text-blue-600 hover:shadow transition-all">
+                        <svg class="h-4 w-4 transform rotate-90" fill="none" stroke="currentColor" viewbox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+        <!-- END: LeftColumn -->
+        <!-- BEGIN: RightColumn (Widgets) -->
+        <section class="flex flex-col space-y-8" data-purpose="widgets-column">
+            <!-- Widget 1: Business Insights -->
+            <article class="bg-white rounded-3xl p-6 shadow-soft h-full flex flex-col justify-between"
+                data-purpose="business-insights-card">
+                <div class="mb-6">
+                    <h2 class="font-serif text-xl text-slate-800 mb-4">Business Insights</h2>
+                    <div class="flex items-start justify-between mb-8">
+                        <div>
+                            <p class="font-serif italic text-lg text-slate-600 mb-1">Monthly Revenue:</p>
+                            <div class="flex items-center gap-3">
+                                <span class="font-serif text-5xl text-slate-900">$4,500</span>
+                                <span class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded flex items-center">
+                                    <span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w-[80px] h-auto flex-shrink-0">
+                            <img alt="Trend Chart" class="w-full h-auto object-contain"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5EibaUA4Rx0PEpdAOox9LCkrKDP3hoCafZbs6E5i709ebZeFqIwLbqjBSmtHROUvjNAlMQQYF0fWrYCjbi-30dURoQR7IGD59m6cMsyXcETLEELKuQ5uXBwbZJf9ie7lma_a4ug9b127PcJIE6IOtmfrLgeGqdbd_C8z8U6Dkn8RQUK1J8qq7Au71PynGqZ3B20Jw3OvaeN_THIP0KBgya2bJmMvIEVE32vpJdcXDm0c6yPVZVa0G9Qz1QQ7GCUk9l_UXISRWG61d" />
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-end border-t border-slate-100 pt-6">
+                        <div>
+                            <p class="font-serif italic text-lg text-slate-600 mb-1">Active Projects:</p>
+                            <span class="font-serif text-5xl text-slate-900 italic">3</span>
+                        </div>
+                        <div class="text-right space-y-1 font-sans text-sm">
+                            <div class="text-slate-500">In Progress: <span class="font-medium text-slate-700">2</span>
+                            </div>
+                            <div class="text-slate-500">Pending: <span class="font-medium text-slate-700">1</span></div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            <!-- Widget 2: Workflow Shortcuts -->
+            <article class="bg-white rounded-3xl p-6 shadow-soft" data-purpose="shortcuts-card">
+                <div class="mb-6">
+                    <h2 class="font-serif text-xl text-slate-800">Workflow Shortcuts</h2>
+                </div>
+                <div class="space-y-4">
+                    <!-- Shortcut 1: Draft Proposal -->
+                    <button
+                        class="w-full flex items-center justify-start px-4 py-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-blue-200"
+                        style="background: linear-gradient(to bottom, #e0f2fe, #ffffff);">
+                        <span class="material-symbols-outlined text-slate-600 mr-3">description</span>
+                        <span class="font-sans text-slate-800 font-medium">Draft Proposal</span>
+                    </button>
+                    <!-- Shortcut 2: New Invoice -->
+                    <button
+                        class="w-full flex items-center justify-start px-4 py-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-blue-200"
+                        style="background: linear-gradient(to bottom, #e0f2fe, #ffffff);">
+                        <span class="material-symbols-outlined text-slate-600 mr-3">receipt_long</span>
+                        <span class="font-sans text-slate-800 font-medium">New Invoice</span>
+                    </button>
+                    <!-- Shortcut 3: Health Check -->
+                    <button
+                        class="w-full flex items-center justify-start px-4 py-4 rounded-xl shadow-sm hover:shadow-md transition-all border border-blue-200"
+                        style="background: linear-gradient(to bottom, #e0f2fe, #ffffff);">
+                        <span class="material-symbols-outlined text-slate-600 mr-3">ecg_heart</span>
+                        <span class="font-sans text-slate-800 font-medium">Health Check</span>
+                    </button>
+                </div>
+            </article>
+        </section>
+        <!-- END: RightColumn -->
+    </main>
+    <!-- END: MainContentArea -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const chatContainer = document.getElementById("chat-messages-container");
+            const chatInput = document.getElementById("chat-input");
+            const sendBtn = document.getElementById("send-btn");
+
+            // Load from LocalStorage
+            const savedChats = localStorage.getItem("lume_dashboard_chat_history");
+            if (savedChats && savedChats.trim() !== '') {
+                chatContainer.innerHTML = savedChats;
+                // Scroll to bottom after loading saved chats
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            function saveChats() {
+                localStorage.setItem("lume_dashboard_chat_history", chatContainer.innerHTML);
+            }
+
+            function appendUserMessage(text) {
+                const msgHTML = `
+            <div class="flex justify-end mt-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs text-slate-400 font-medium mr-2">You</span>
+                    <div class="text-white rounded-2xl px-5 py-3 max-w-md shadow-sm text-sm leading-relaxed bg-blue-100 text-slate-800">
+                        <p>${text}</p>
+                    </div>
+                </div>
+            </div>`;
+                chatContainer.insertAdjacentHTML("beforeend", msgHTML);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            function appendBotMessage(text) {
+                const msgHTML = `
+            <div class="flex items-start space-x-3 mt-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden border border-slate-100 shadow-sm">
+                    <img alt="LUME AI" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDT5GdAZX3jZumBqjXx6KOH-QeXM6d6w-wZVE4hMGfhVjl1VQRSg32cn5ykAGwP4cjz9jVtyQ_NMnf1siiC0oAdcEzaVXHqHQE4d9f4YYtFoKX_LakOwUS6lrGA8d3PTtWwA-SxnElmbz_sGgXrUKVmwjbuv9O4WgsLkCAI10pH62OqJ-WdV1-LKXrnRU0qpraKfNN217SDZJyUPt7zFeKa4U_yKQPDrPbwR0y8PMPQe1o1tSaHOIZgI-Z4LE3k7jvALEO0jgv5ramF"/>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xs text-slate-400 font-medium ml-1 mb-1">LUME</span>
+                    <div class="bg-white border border-slate-100 text-slate-700 rounded-2xl rounded-tl-none px-5 py-4 max-w-lg shadow-sm text-sm leading-relaxed">
+                        <p>${text}</p>
+                    </div>
+                </div>
+            </div>`;
+                chatContainer.insertAdjacentHTML("beforeend", msgHTML);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
+            function handleSend() {
+                if (!chatInput) return;
+                const text = chatInput.value.trim();
+                if (!text) return;
+
+                appendUserMessage(text);
+                chatInput.value = "";
+                saveChats();
+
+                // Simulate bot reply for mockup prototype
+                setTimeout(() => {
+                    appendBotMessage("I have received your command: " + text + ".");
+                    saveChats();
+                }, 800);
+            }
+
+            if (sendBtn) {
+                sendBtn.addEventListener("click", handleSend);
+            }
+
+            if (chatInput) {
+                chatInput.addEventListener("keypress", (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSend();
+                    }
+                });
+            }
+
+            // Setup shortcuts
+            const shortcuts = document.querySelectorAll('[data-purpose="shortcuts-card"] button');
+            shortcuts.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const cmd = btn.querySelector('span.font-sans');
+                    if (cmd) {
+                        if (chatInput) chatInput.value = cmd.innerText;
+                        handleSend();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

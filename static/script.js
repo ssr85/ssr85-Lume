@@ -3,6 +3,16 @@ const userInput = document.getElementById('user-input');
 const sendBtn = document.getElementById('send-btn');
 const lumeInance = document.querySelector('.lume-inance');
 
+// Delete Modal Elements
+let pendingDeleteTarget = null;
+let pendingDeleteType = null;
+const deleteModal = document.getElementById('delete-modal');
+const deleteVerifyInput = document.getElementById('delete-verify-input');
+const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+const deleteTargetNameDisplay = document.getElementById('delete-target-name');
+const deleteEntityType = document.getElementById('delete-entity-type');
+
 // INITIAL ANIMATIONS
 gsap.from(".bento-card", {
     duration: 1.2,
@@ -36,7 +46,30 @@ async function sendMessage() {
             body: JSON.stringify({ message })
         });
         const data = await response.json();
-        appendMessage('bot', data.reply);
+        let botReply = data.reply;
+
+        const deleteModalMatch = botReply.match(/\[ACTION:DELETE_MODAL:(.+?)\]/);
+        if (deleteModalMatch) {
+            try {
+                const modalData = JSON.parse(deleteModalMatch[1]);
+                pendingDeleteTarget = modalData.name;
+                pendingDeleteType = modalData.type;
+
+                // Remove the action block from visible message
+                botReply = botReply.replace(deleteModalMatch[0], '').trim();
+
+                // Setup and show modal
+                deleteTargetNameDisplay.textContent = pendingDeleteTarget;
+                deleteEntityType.textContent = pendingDeleteType;
+                deleteVerifyInput.value = '';
+                confirmDeleteBtn.disabled = true;
+                deleteModal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Failed to parse DELETE_MODAL data", e);
+            }
+        }
+
+        appendMessage('bot', botReply);
 
         // Update stats if present in response (LUME is System Master)
         if (data.stats) {
@@ -88,6 +121,48 @@ function formatMarkdown(text) {
 sendBtn.addEventListener('click', sendMessage);
 userInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
+});
+
+// Modal Event Listeners
+deleteVerifyInput.addEventListener('input', (e) => {
+    if (e.target.value === pendingDeleteTarget) {
+        confirmDeleteBtn.disabled = false;
+    } else {
+        confirmDeleteBtn.disabled = true;
+    }
+});
+
+cancelDeleteBtn.addEventListener('click', () => {
+    deleteModal.classList.add('hidden');
+    pendingDeleteTarget = null;
+    appendMessage("bot", `Deletion cancelled.`);
+});
+
+confirmDeleteBtn.addEventListener('click', async () => {
+    deleteModal.classList.add('hidden');
+    appendMessage("bot", `Deleting ${pendingDeleteTarget}...`);
+
+    try {
+        const response = await fetch('/api/delete-entity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                target_name: pendingDeleteTarget,
+                entity_type: pendingDeleteType
+            })
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            appendMessage("bot", `✅ ${pendingDeleteTarget} has been permanently deleted.`);
+        } else {
+            appendMessage("bot", `❌ Deletion failed: ${result.message}`);
+        }
+    } catch (e) {
+        console.error("Error deleting entity", e);
+        appendMessage("bot", `❌ System error during deletion.`);
+    }
+    pendingDeleteTarget = null;
 });
 
 window.quickCommand = quickCommand;
