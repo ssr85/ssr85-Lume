@@ -17,15 +17,19 @@ You are LUME, a highly intelligent AI administrative assistant managing a freela
 - You do not just assist; you OPERATE and MANAGE proactively.
 """
 
-def call_llm(prompt: str, model: str = "gpt-4o", json_mode: bool = False, system_message: str = None) -> str:
+def call_llm(prompt: str, model: str = "gpt-4o", json_mode: bool = False, system_message: str = None, history: list = None) -> str:
     """Centralized wrapper for OpenAI calls with persistent System Master persona."""
     try:
         response_format = {"type": "json_object"} if json_mode else {"type": "text"}
         
         messages = [
-            {"role": "system", "content": system_message or SYSTEM_MASTER_CORE},
-            {"role": "user", "content": prompt}
+            {"role": "system", "content": system_message or SYSTEM_MASTER_CORE}
         ]
+        
+        if history:
+            messages.extend(history)
+            
+        messages.append({"role": "user", "content": prompt})
         
         response = client.chat.completions.create(
             model=model,

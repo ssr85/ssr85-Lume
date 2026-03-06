@@ -8,7 +8,7 @@ from chatbot.proposal import proposal_handler
 from chatbot.invoice import invoice_handler
 from chatbot.reminder import reminder_handler
 from chatbot.query import query_handler, calculate_stats
-from storage import db
+from storage import db, chats
 
 app = FastAPI(title="LUME - Freelancer Admin Assistant")
 
@@ -39,12 +39,21 @@ def health():
 async def chat(request: Request):
     data = await request.json()
     message = data.get("message", "")
+    thread_id = data.get("thread_id")
+    
+    if not thread_id:
+        title = " ".join(message.split()[:3]) + "..."
+        thread_id = chats.create_thread(title)
+        
+    chats.append_message(thread_id, "user", message)
+    
     user_id = "default_user" # Simplified for MVP
     
     if user_id not in sessions:
         sessions[user_id] = {"collected_fields": {}, "pending_fields": [], "current_intent": None}
     
     session = sessions[user_id]
+    session["thread_id"] = thread_id
     
     # Intent classification
     intent = detect_intent(message)
@@ -81,6 +90,17 @@ async def delete_entity(req: DeleteRequest):
         else:
             return {"status": "error", "message": f"Client {req.target_name} not found."}
     return {"status": "error", "message": "Unknown entity type."}
+
+@app.get("/api/chats")
+async def get_chats():
+    return {"status": "success", "threads": chats.get_all_threads()}
+
+@app.get("/api/chats/{thread_id}")
+async def get_chat_thread(thread_id: str):
+    thread = chats.get_thread(thread_id)
+    if thread:
+        return {"status": "success", "thread": thread}
+    return {"status": "error", "message": "Thread not found"}
 
 if __name__ == "__main__":
     import uvicorn
