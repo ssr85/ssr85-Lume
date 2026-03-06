@@ -101,8 +101,6 @@ body {
 .sidebar {
     width: 320px;
     padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
 }
 
 .sidebar-header {
@@ -210,7 +208,6 @@ body {
 
 .user-card {
     background: rgba(255, 255, 255, 0.08);
-    /* Subdued slate gray/white for user */
     border: none;
     box-shadow: none;
     color: white;

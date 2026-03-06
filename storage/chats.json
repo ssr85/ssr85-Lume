@@ -1,0 +1,46 @@
+{
+  "current_id": 3,
+  "threads": {
+    "thread_1": {
+      "id": "thread_1",
+      "title": "clients?...",
+      "updated_at": "2026-03-06T20:43:24.041515Z",
+      "messages": [
+        {
+          "role": "user",
+          "content": "clients?"
+        },
+        {
+          "role": "assistant",
+          "content": "Here is the current client list:\n\n1. **Amit Singh**\n   - **Email**: sarabjit.rattan@gmail.com\n   - **Company**: Not provided\n   - **Phone**: Not provided\n   - **GSTIN**: Not provided\n   - **Address**: City and Country not provided\n   - **Created At**: 2026-03-07\n   - **Projects**: None\n   - **Proposals**: None\n   - **Invoices**: None\n\nAmit Singh's profile is missing some critical information. Please provide his phone number, GSTIN, and address details. Once updated, we can proceed to draft a proposal or log a project for him."
+        }
+      ]
+    },
+    "thread_2": {
+      "id": "thread_2",
+      "title": "draft a proposal...",
+      "updated_at": "2026-03-06T20:44:14.491821Z",
+      "messages": [
+        {
+          "role": "user",
+          "content": "draft a proposal for digital. marketing , 2 month durationn \u20b9 25000."
+        }
+      ]
+    },
+    "thread_3": {
+      "id": "thread_3",
+      "title": "amit...",
+      "updated_at": "2026-03-06T20:44:30.514624Z",
+      "messages": [
+        {
+          "role": "user",
+          "content": "amit"
+        },
+        {
+          "role": "assistant",
+          "content": "Amit Singh is already in the system. His email is sarabjit.rattan@gmail.com. However, his profile is missing some details. Could you provide his phone number, GSTIN, or any address details? Once his profile is complete, we can proceed to draft a proposal or log a project for him."
+        }
+      ]
+    }
+  }
+}

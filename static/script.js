@@ -1,7 +1,10 @@
+let currentThreadId = null;
+
 const chatWindow = document.getElementById('chat-window');
 const userInput = document.getElementById('user-input');
 const sendBtn = document.getElementById('send-btn');
-const lumeInance = document.querySelector('.lume-inance');
+const newChatBtn = document.getElementById('new-chat-btn');
+const historyList = document.getElementById('history-list');
 
 // Delete Modal Elements
 let pendingDeleteTarget = null;
@@ -13,23 +16,55 @@ const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
 const deleteTargetNameDisplay = document.getElementById('delete-target-name');
 const deleteEntityType = document.getElementById('delete-entity-type');
 
-// INITIAL ANIMATIONS
-gsap.from(".bento-card", {
-    duration: 1.2,
-    y: 50,
-    opacity: 0,
-    stagger: 0.2,
-    ease: "power4.out"
-});
+async function loadChatHistory() {
+    try {
+        const res = await fetch('/api/chats');
+        const data = await res.json();
+        historyList.innerHTML = '';
 
-// Lume-inance follow effect
-document.addEventListener('mousemove', (e) => {
-    gsap.to(lumeInance, {
-        duration: 0.8,
-        x: e.clientX - 300,
-        y: e.clientY - 300,
-        ease: "power2.out"
-    });
+        if (data.threads) {
+            data.threads.forEach(t => {
+                const div = document.createElement('div');
+                div.className = `history-item ${t.id === currentThreadId ? 'active' : ''}`;
+                div.onclick = () => selectThread(t.id);
+
+                const date = new Date(t.updated_at).toLocaleDateString();
+                div.innerHTML = `<div class="history-date">${date}</div><div class="history-title">${t.title}</div>`;
+                historyList.appendChild(div);
+            });
+        }
+    } catch (e) {
+        console.error("Error loading chat history", e);
+    }
+}
+
+async function selectThread(id) {
+    currentThreadId = id;
+    loadChatHistory(); // Update active state in UI
+
+    try {
+        const res = await fetch(`/api/chats/${id}`);
+        const data = await res.json();
+
+        chatWindow.innerHTML = '';
+
+        if (data.thread && data.thread.messages) {
+            data.thread.messages.forEach(msg => {
+                const type = msg.role === 'assistant' ? 'bot' : 'user';
+                appendMessage(type, msg.content, true); // skip animation
+            });
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+    } catch (e) {
+        console.error("Error loading thread", e);
+    }
+}
+
+newChatBtn.addEventListener('click', () => {
+    currentThreadId = null;
+    chatWindow.innerHTML = '';
+    loadChatHistory();
+    appendMessage('bot', 'Welcome. I am LUME. Your business intelligence is loaded and ready. How shall we operate today?');
 });
 
 async function sendMessage() {
@@ -43,7 +78,7 @@ async function sendMessage() {
         const response = await fetch('/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({ message, thread_id: currentThreadId })
         });
         const data = await response.json();
         let botReply = data.reply;
@@ -71,28 +106,11 @@ async function sendMessage() {
 
         appendMessage('bot', botReply);
 
-        // Update stats if present in response (LUME is System Master)
-        if (data.stats) {
-            updateStats(data.stats);
-        }
+        // Refresh sidebar so new chat gets a title/date
+        loadChatHistory();
+
     } catch (err) {
         appendMessage('bot', "System error. Intelligence link severed. Reconnecting...");
-    }
-}
-
-function updateStats(stats) {
-    if (stats.revenue) {
-        gsap.to("#stat-revenue", {
-            duration: 1,
-            innerText: stats.revenue,
-            snap: { innerText: 1 },
-            onUpdate: function () {
-                this.targets()[0].innerText = `$${parseFloat(this.targets()[0].innerText).toLocaleString()}`;
-            }
-        });
-    }
-    if (stats.projects) {
-        gsap.to("#stat-projects", { duration: 1, innerText: stats.projects, snap: { innerText: 1 } });
     }
 }
 
@@ -101,15 +119,24 @@ function quickCommand(cmd) {
     sendMessage();
 }
 
-function appendMessage(role, text) {
+function appendMessage(role, text, skipAnimation = false) {
     const card = document.createElement('div');
     card.className = `editorial-card ${role}-card`;
-    card.innerHTML = formatMarkdown(text);
+
+    // We create an interior div for the text to ensure our custom formatting
+    // doesn't clobber the card's structure if we later add avatars, etc.
+    const textContent = document.createElement('div');
+    textContent.className = 'message-content';
+    textContent.innerHTML = formatMarkdown(text);
+
+    card.appendChild(textContent);
 
     chatWindow.appendChild(card);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 
-    gsap.from(card, { duration: 0.5, y: 20, opacity: 0, ease: "power2.out" });
+    if (!skipAnimation && window.gsap) {
+        gsap.from(card, { duration: 0.5, y: 20, opacity: 0, ease: "power2.out" });
+    }
 }
 
 function formatMarkdown(text) {
@@ -127,8 +154,10 @@ userInput.addEventListener('keypress', (e) => {
 deleteVerifyInput.addEventListener('input', (e) => {
     if (e.target.value === pendingDeleteTarget) {
         confirmDeleteBtn.disabled = false;
+        confirmDeleteBtn.classList.add('hover:bg-red-500/30');
     } else {
         confirmDeleteBtn.disabled = true;
+        confirmDeleteBtn.classList.remove('hover:bg-red-500/30');
     }
 });
 
@@ -166,3 +195,23 @@ confirmDeleteBtn.addEventListener('click', async () => {
 });
 
 window.quickCommand = quickCommand;
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadChatHistory();
+    if (!currentThreadId) {
+        appendMessage('bot', 'Welcome. I am LUME. Your business intelligence is loaded and ready. How shall we operate today?');
+    }
+
+    // Add Lume-inance if it still exists
+    const lumeInance = document.querySelector('.lume-inance');
+    if (lumeInance) {
+        document.addEventListener('mousemove', (e) => {
+            gsap.to(lumeInance, {
+                duration: 0.8,
+                x: e.clientX - 300,
+                y: e.clientY - 300,
+                ease: "power2.out"
+            });
+        });
+    }
+});
