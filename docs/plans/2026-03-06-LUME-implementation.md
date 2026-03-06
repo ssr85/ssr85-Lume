@@ -282,6 +282,8 @@ Mount `documents/` directory as static files to allow PDF/Word downloads.
 **Step 2: Build Glassmorphism UI**
 Premium design as requested.
 - **Requirement:** Implement a "typing indicator" to show when the bot is processing.
+Implement the creative vision as defined in [UI_SPECIFICATION.md](file:///Users/ssrrattan/Documents/LUME/UI_SPECIFICATION.md) ("The Editorial Glass").
+- **Requirement:** Implement a "typing indicator" and "Lume-inance" light source effect.
 - **Requirement:** After displaying a generated proposal or reminder draft, provide a text area to allow the user to edit the content before it is finalized (downloaded or sent).
 - **Requirement:** Show inline "Download PDF" / "Download Word" buttons for generated documents.
 - **Requirement:** Show a "Send via Email" button for payment reminder drafts.
