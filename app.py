@@ -6,7 +6,8 @@ from chatbot.intent import detect_intent
 from chatbot.proposal import proposal_handler
 from chatbot.invoice import invoice_handler
 from chatbot.reminder import reminder_handler
-from chatbot.query import query_handler
+from chatbot.query import query_handler, calculate_stats
+from storage import db
 
 app = FastAPI(title="LUME - Freelancer Admin Assistant")
 
@@ -59,8 +60,12 @@ async def chat(request: Request):
         reply = reminder_handler(message, session)
     else:
         reply = query_handler(message, session)
+    
+    # Always send fresh stats for the Bento UI
+    raw_db = db.get_raw_database()
+    stats = calculate_stats(raw_db)
         
-    return {"reply": reply}
+    return {"reply": reply, "stats": stats}
 
 if __name__ == "__main__":
     import uvicorn

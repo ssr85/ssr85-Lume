@@ -1,46 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LUME | Editorial Glass</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,900&family=Inter:wght@300;400;600&family=DM+Sans:wght@400;500&family=DM+Mono:wght@500&family=Outfit:wght@300;400&display=swap" rel="stylesheet">
+    <title>LUME | Editorial Bento</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,900&family=Inter:wght@300;400;600&family=Geist:wght@300;400;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
+
 <body>
     <div class="lume-inance"></div>
-    <div class="app-container">
-        <header class="editorial-header">
+
+    <div class="bento-grid">
+        <!-- HERO CARD -->
+        <header class="bento-card hero-card">
             <h1 class="headline">LUME</h1>
-            <p class="sub-headline">The Editorial Glass</p>
+            <p class="sub-headline">System Master OS</p>
         </header>
 
-        <main id="chat-window">
-            <!-- Messages will float here -->
-            <div class="editorial-card bot-card initial-card">
-                <div class="ink-bar"></div>
-                <div class="card-content">
-                    <p>Welcome. I am LUME, your personal admin assistant. How can I help you manage your business today?</p>
+        <!-- STATS CARD -->
+        <aside class="bento-card stats-card">
+            <div class="stat-item">
+                <span class="stat-label">Monthly Revenue</span>
+                <span class="stat-value" id="stat-revenue">$0.00</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Active Projects</span>
+                <span class="stat-value" id="stat-projects">0</span>
+            </div>
+        </aside>
+
+        <!-- CHAT CARD -->
+        <main class="bento-card chat-card">
+            <div id="chat-window">
+                <div class="editorial-card bot-card initial-card">
+                    <div class="ink-bar"></div>
+                    <div class="card-content">
+                        <p>Welcome. I am LUME. Your business intelligence is loaded and ready. How shall we operate
+                            today?</p>
+                    </div>
                 </div>
             </div>
+
+            <section class="interaction-area">
+                <div class="input-container glass-input">
+                    <input type="text" id="user-input" placeholder="Enter command..." autocomplete="off">
+                    <button id="send-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" />
+                        </svg>
+                    </button>
+                </div>
+            </section>
         </main>
 
-        <section class="interaction-area">
-            <div id="editing-overlay" class="hidden">
-                 <textarea id="refinement-input" placeholder="Refine your draft..."></textarea>
-                 <button id="apply-refinement" class="ink-bleed-btn">Apply Edit</button>
+        <!-- QUICK ACTIONS -->
+        <nav class="bento-card actions-card">
+            <h3 class="card-title">Quick Actions</h3>
+            <div class="action-grid">
+                <button class="action-btn" onclick="quickCommand('Create Proposal')">New Proposal</button>
+                <button class="action-btn" onclick="quickCommand('Generate Invoice')">Issue Invoice</button>
+                <button class="action-btn" onclick="quickCommand('Business Health')">Health Check</button>
             </div>
-            <div class="input-container glass-panel">
-                <input type="text" id="user-input" placeholder="Ask LUME anything..." autocomplete="off">
-                <button id="send-btn">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </button>
-            </div>
-        </section>
+        </nav>
     </div>
+
     <script src="/static/script.js"></script>
 </body>
+
 </html>

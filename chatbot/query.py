@@ -87,3 +87,23 @@ def query_handler(message: str, session: dict):
             print(f"Agency Dispatch Error: {e}")
             
     return response.split("{")[0].strip()
+
+def calculate_stats(db_data: dict) -> dict:
+    """Calculates high-level business stats for the Bento UI."""
+    total_revenue = 0.0
+    active_projects = 0
+    
+    for client in db_data.get("clients", {}).values():
+        # Sum all invoices
+        for inv in client.get("invoices", []):
+            total_revenue += inv.get("grand_total", 0)
+        
+        # Count active projects
+        for proj in client.get("projects", []):
+            if proj.get("status") == "ACTIVE":
+                active_projects += 1
+                
+    return {
+        "revenue": round(total_revenue, 2),
+        "projects": active_projects
+    }
