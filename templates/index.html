@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUME | Editorial Glass</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,900&family=Inter:wght@300;400;600&family=DM+Sans:wght@400;500&family=DM+Mono:wght@500&family=Outfit:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="lume-inance"></div>
+    <div class="app-container">
+        <header class="editorial-header">
+            <h1 class="headline">LUME</h1>
+            <p class="sub-headline">The Editorial Glass</p>
+        </header>
+
+        <main id="chat-window">
+            <!-- Messages will float here -->
+            <div class="editorial-card bot-card initial-card">
+                <div class="ink-bar"></div>
+                <div class="card-content">
+                    <p>Welcome. I am LUME, your personal admin assistant. How can I help you manage your business today?</p>
+                </div>
+            </div>
+        </main>
+
+        <section class="interaction-area">
+            <div id="editing-overlay" class="hidden">
+                 <textarea id="refinement-input" placeholder="Refine your draft..."></textarea>
+                 <button id="apply-refinement" class="ink-bleed-btn">Apply Edit</button>
+            </div>
+            <div class="input-container glass-panel">
+                <input type="text" id="user-input" placeholder="Ask LUME anything..." autocomplete="off">
+                <button id="send-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </section>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>

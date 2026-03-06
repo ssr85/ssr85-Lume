@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pdf
+*.docx
+storage/data.json
+.DS_Store
+venv/
+env/
+.pytest_cache/
