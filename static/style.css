@@ -213,36 +213,41 @@ body {
 /* PROGRESS BAR */
 .progress-pill {
     position: absolute;
-    top: 5rem;
+    top: 0.75rem;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 50;
-    background: rgba(255, 255, 255, 0.05);
+    z-index: 100;
+    background: rgba(42, 86, 255, 0.1);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 0.6rem 1.2rem;
+    border: 1px solid rgba(42, 86, 255, 0.3);
+    padding: 0.4rem 1rem;
     border-radius: 999px;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    width: 220px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    gap: 0.3rem;
+    width: 180px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.progress-pill.hidden {
+    display: none !important;
 }
 
 .progress-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
-    letter-spacing: 0.1rem;
-    color: var(--text-dim);
+    letter-spacing: 0.08rem;
+    color: #4A72FF;
     text-align: center;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .progress-track {
-    height: 3px;
+    height: 2px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 2px;
+    border-radius: 1px;
     overflow: hidden;
 }
 

@@ -92,6 +92,11 @@ async function deleteThread(id) {
 newChatBtn.addEventListener('click', () => {
     currentThreadId = null;
     chatWindow.innerHTML = '';
+
+    // Hide progress bar just in case
+    const progressContainer = document.getElementById('progress-container');
+    if (progressContainer) progressContainer.classList.add('hidden');
+
     loadChatHistory();
     appendMessage('bot', 'Welcome. I am LUME. Your business intelligence is loaded and ready. How shall we operate today?');
 });

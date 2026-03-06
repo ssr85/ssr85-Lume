@@ -30,8 +30,9 @@ The proposal must have these sections:
 7. Terms
 8. Closing
 
-Do not use placeholders like [Insert Name]. Use the real data.
-Respond with the full markdown content of the proposal.
+CRITICAL: If the user information above is complete, generate the FULL markdown proposal NOW. 
+Do not ask for further confirmation. Do not say "Shall I proceed?". 
+Just output the markdown starting with the Introduction.
 """
 
 EDIT_PROMPT = """
@@ -61,15 +62,22 @@ def proposal_handler(message: str, session: dict):
     required = ["client_name", "project_title", "project_description", "deliverables", "timeline"]
     missing = [f for f in required if not session["collected_fields"].get(f)]
     
+    # Confirmation Keyword Detection (Direct Action)
+    confirmation_keywords = ["proceed", "draft it", "yes", "go ahead", "do it", "sure", "ok", "okay"]
+    is_confirmed = any(kw in message.lower() for kw in confirmation_keywords)
+    
     if missing:
-        field_labels = {
-            "client_name": "client name",
-            "project_title": "project title",
-            "project_description": "brief project description",
-            "deliverables": "main deliverables",
-            "timeline": "expected timeline"
-        }
-        return f"I'll help you with that proposal! To get started, could you tell me the **{field_labels[missing[0]]}**?"
+        # If user explicitly said "proceed" or similar, and we have enough to wing it, proceed anyway
+        # but for now, let's just make sure we don't ask if we have enough
+        if not is_confirmed:
+            field_labels = {
+                "client_name": "client name",
+                "project_title": "project title",
+                "project_description": "brief project description",
+                "deliverables": "main deliverables",
+                "timeline": "expected timeline"
+            }
+            return f"I'll help you with that proposal! To get started, could you tell me the **{field_labels[missing[0]]}**?"
 
     # If we have basic info but no email for a new client
     client_name = session["collected_fields"]["client_name"]
@@ -136,9 +144,9 @@ def proposal_handler(message: str, session: dict):
     }]
     
     # Return preview with real links (simulated for now with /docs path)
+    # Return focused preview
     return (
-        f"### Proposal Draft (For Your Review)\n\n{session['draft_content']}\n\n"
-        "--- \n"
-        "**Please review the draft above.** You can ask me to refine it (e.g., 'Make it more technical') or download the files below.\n\n"
+        f"### Proposal Generated for {client_name}\n\n"
+        "I've drafted the complete proposal based on our discussion. You can review the details below, request refinements, or download the files for sharing.\n\n"
         f"Preview: [**Open PDF Preview**](/docs/proposals/{pdf_filename}) | [Download Word](/docs/proposals/{docx_filename})"
     )

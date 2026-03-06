@@ -50,13 +50,18 @@ def invoice_handler(message: str, session: dict):
     required = ["client_name", "work_items", "rate"]
     missing = [f for f in required if not session["collected_fields"].get(f)]
     
+    # Confirmation Keyword Detection (Direct Action)
+    confirmation_keywords = ["proceed", "bill", "invoice it", "yes", "go ahead", "do it", "sure", "ok", "okay"]
+    is_confirmed = any(kw in message.lower() for kw in confirmation_keywords)
+
     if missing:
-        field_labels = {
-            "client_name": "client name",
-            "work_items": "description of work",
-            "rate": "hourly rate"
-        }
-        return f"I'm ready to create that invoice. Could you provide the **{field_labels[missing[0]]}**?"
+        if not is_confirmed:
+            field_labels = {
+                "client_name": "client name",
+                "work_items": "description of work",
+                "rate": "hourly rate"
+            }
+            return f"I'm ready to create that invoice. Could you provide the **{field_labels[missing[0]]}**?"
 
     # Client management
     client_name = session["collected_fields"]["client_name"]
@@ -102,17 +107,12 @@ def invoice_handler(message: str, session: dict):
         "url": f"/docs/invoices/{invoice_num}.pdf",
         "type": "pdf"
     }]
-    
     # Generate PDF (Staging)
     pdf_path = f"documents/invoices/{invoice_num}.pdf"
     # generate_invoice_pdf(invoice_record, pdf_path) # Would call pdf_generator
     
     return (
-        f"### Invoice Draft {invoice_num} (For Your Review)\n\n"
-        f"**Client:** {client_name}\n"
-        f"**Amount Due:** ${calc['grand_total']}\n"
-        f"**Due Date:** {due_date}\n\n"
-        "--- \n"
-        "**Please review the generated invoice.**\n\n"
+        f"### Invoice {invoice_num} Generated\n\n"
+        f"I've created the invoice for **{client_name}** totaling **${calc['grand_total']}**. You can preview it below before we proceed.\n\n"
         f"Preview: [**Open PDF Preview**](/docs/invoices/{invoice_num}.pdf)"
     )
