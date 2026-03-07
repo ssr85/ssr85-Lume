@@ -27,6 +27,7 @@ The Freelancer Admin Chatbot follows a single-backend, single-frontend architect
 |   +----------+ +---------+ +----------------------+      |
 |   | Proposal | | Invoice | | Payment Reminder     |      |
 |   | + Editing| | + Part-P| | + Gmail Send Module  |      |
+|   | + Gmail  | | + Gmail | |                      |      |
 |   +-----+----+ +----+----+ +----------+-----------+      |
 |         |           |                 |                   |
 |         v           v                 v                   |
@@ -38,16 +39,17 @@ The Freelancer Admin Chatbot follows a single-backend, single-frontend architect
 |   +--------------------------------------------------+   |
 |   |         Document Generator                       |   |
 |   |   ReportLab (PDF) & python-docx (Word)           |   |
+|   +-----------------------+--------------------------+   |
+|                           |                              |
+|                           v                              |
+|   +--------------------------------------------------+   |
+|   |         Gmail Sender (smtplib)                   |   |
+|   |   Sends emails (reminders/invoices/proposals)    |   |
 |   +--------------------------------------------------+   |
 |                                                          |
 |   +--------------------------------------------------+   |
 |   |         Storage Layer (storage/db.py)            |   |
 |   |   JSON file (ClientID as Primary Key)            |   |
-|   +--------------------------------------------------+   |
-|                                                          |
-|   +--------------------------------------------------+   |
-|   |         Gmail Sender (smtplib)                   |   |
-|   |   Sends reminder email via App Password          |   |
 |   +--------------------------------------------------+   |
 +----------------------------------------------------------+
 ```
@@ -64,7 +66,7 @@ The Freelancer Admin Chatbot follows a single-backend, single-frontend architect
 6. Once all required fields are available, the LLM API is called to generate content
 7. Generated content is returned to the chat as a preview
 8. If a document is generated, the **Document Generator** creates a PDF/Word file and returns a download link
-9. If a reminder is confirmed, the **Gmail Sender** dispatches the email and logs the event
+9. If a reminder, invoice, or proposal is confirmed for sending, the **Gmail Sender** dispatches the email and logs the event
 10. All relevant data is saved to the **Storage Layer**
 
 ---
@@ -79,12 +81,14 @@ The Freelancer Admin Chatbot follows a single-backend, single-frontend architect
 ### `chatbot/proposal.py`
 - Manages multi-turn collection of proposal fields
 - Calls the LLM with a structured prompt to generate a full proposal
+- Triggers Gmail send for proposal delivery
 - See [PROPOSAL_GENERATION.md](PROPOSAL_GENERATION.md)
 
 ### `chatbot/invoice.py`
 - Collects invoice fields through conversation
 - Performs all calculations (subtotal, tax, grand total)
 - Auto-generates sequential invoice numbers
+- Triggers Gmail send for invoice delivery
 - See [INVOICE_GENERATION.md](INVOICE_GENERATION.md)
 
 ### `chatbot/reminder.py`
