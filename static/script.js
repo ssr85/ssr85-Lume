@@ -140,10 +140,21 @@ async function sendMessage() {
     // Show Progress Bar
     const progressContainer = document.getElementById('progress-container');
     const progressFill = document.getElementById('progress-fill');
+    const progressPercent = document.getElementById('progress-percent');
 
     progressContainer.classList.remove('hidden');
-    progressFill.style.transition = 'width 3s cubic-bezier(0.1, 0.5, 0.3, 1)';
+    progressFill.style.transition = 'width 4s cubic-bezier(0.1, 0.5, 0.3, 1)';
     progressFill.style.width = '90%';
+
+    let pct = 0;
+    progressPercent.textContent = "0%";
+    const pctInterval = setInterval(() => {
+        if (pct < 88) {
+            pct += Math.random() * 15;
+            if (pct > 88) pct = 88;
+            progressPercent.textContent = `${Math.floor(pct)}%`;
+        }
+    }, 400);
 
     try {
         const response = await fetch('/chat', {
@@ -154,12 +165,15 @@ async function sendMessage() {
         const data = await response.json();
 
         // Complete Progress
+        clearInterval(pctInterval);
+        progressPercent.textContent = '100%';
         progressFill.style.transition = 'width 0.3s ease-out';
         progressFill.style.width = '100%';
         setTimeout(() => {
             progressContainer.classList.add('hidden');
             progressFill.style.width = '0%';
-        }, 400);
+            progressPercent.textContent = '0%';
+        }, 600);
 
         // Result Handling
         let botReply = data.reply;
