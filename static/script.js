@@ -1,4 +1,4 @@
-let currentThreadId = null;
+let currentThreadId = localStorage.getItem('lume_current_thread_id');
 
 const chatWindow = document.getElementById('chat-window');
 const userInput = document.getElementById('user-input');
@@ -16,11 +16,38 @@ const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
 const deleteTargetNameDisplay = document.getElementById('delete-target-name');
 const deleteEntityType = document.getElementById('delete-entity-type');
 
-// Preview Modal Elements
 const previewModal = document.getElementById('preview-modal');
 const pdfViewer = document.getElementById('pdf-viewer');
+const docxViewer = document.getElementById('docx-viewer');
 const closePreviewBtn = document.getElementById('close-preview-btn');
 const downloadPreviewBtn = document.getElementById('download-preview-btn');
+
+async function openPreview(url, name) {
+    pdfViewer.classList.add('hidden');
+    docxViewer.classList.add('hidden');
+    pdfViewer.src = '';
+    docxViewer.innerHTML = '';
+
+    downloadPreviewBtn.href = url;
+    downloadPreviewBtn.setAttribute('download', name);
+
+    if (url.endsWith('.pdf')) {
+        pdfViewer.src = url;
+        pdfViewer.classList.remove('hidden');
+    } else if (url.endsWith('.docx')) {
+        docxViewer.classList.remove('hidden');
+        try {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            await docx.renderAsync(arrayBuffer, docxViewer);
+        } catch (e) {
+            console.error("Error rendering DOCX", e);
+            docxViewer.innerHTML = `<div style="color:white; padding: 2rem;">Error loading DOCX preview. Please download the file to view it.</div>`;
+        }
+    }
+
+    previewModal.classList.remove('hidden');
+}
 
 async function loadChatHistory() {
     try {
@@ -51,6 +78,7 @@ async function loadChatHistory() {
 
 async function selectThread(id) {
     currentThreadId = id;
+    localStorage.setItem('lume_current_thread_id', id);
     loadChatHistory(); // Update active state in UI
 
     try {
@@ -91,6 +119,7 @@ async function deleteThread(id) {
 
 newChatBtn.addEventListener('click', () => {
     currentThreadId = null;
+    localStorage.removeItem('lume_current_thread_id');
     chatWindow.innerHTML = '';
 
     // Hide progress bar just in case
@@ -139,6 +168,7 @@ async function sendMessage() {
         // Update currentThreadId if this was a new chat
         if (data.thread_id && !currentThreadId) {
             currentThreadId = data.thread_id;
+            localStorage.setItem('lume_current_thread_id', currentThreadId);
         }
 
         const deleteModalMatch = botReply.match(/\[ACTION:DELETE_MODAL:(.+?)\]/);
@@ -286,28 +316,82 @@ confirmDeleteBtn.addEventListener('click', async () => {
     pendingDeleteTarget = null;
 });
 
-// PDF Preview Interceptor (Event Delegation)
+function openPreview(url, fileName) {
+    pdfViewer.src = '';
+    docxViewer.innerHTML = '';
+    downloadPreviewBtn.href = url;
+    downloadPreviewBtn.setAttribute('download', fileName);
+
+    if (url.endsWith('.pdf')) {
+        pdfViewer.src = url;
+        pdfViewer.classList.remove('hidden');
+        docxViewer.classList.add('hidden');
+    } else if (url.endsWith('.docx')) {
+        // Use Google Docs Viewer for DOCX files
+        docxViewer.innerHTML = `<iframe src="https://docs.google.com/gview?url=${encodeURIComponent(window.location.origin + url)}&embedded=true" style="width:100%; height:100%;" frameborder="0"></iframe>`;
+        docxViewer.classList.remove('hidden');
+        pdfViewer.classList.add('hidden');
+    } else {
+        // Fallback for other file types, or just open in new tab
+        window.open(url, '_blank');
+        return; // Don't show the modal for unsupported types
+    }
+    previewModal.classList.remove('hidden');
+}
+
+// Preview Interceptor (Event Delegation)
 chatWindow.addEventListener('click', (e) => {
     const link = e.target.closest('.chat-link');
-    if (link && link.getAttribute('href').endsWith('.pdf')) {
-        e.preventDefault();
+    if (link) {
         const url = link.getAttribute('href');
-
-        pdfViewer.src = url;
-        downloadPreviewBtn.href = url;
-        previewModal.classList.remove('hidden');
+        if (url.endsWith('.pdf') || url.endsWith('.docx')) {
+            e.preventDefault();
+            const fileName = url.split('/').pop();
+            openPreview(url, fileName);
+        }
     }
 });
 
 const sendToClientBtn = document.getElementById('send-to-client-btn');
 
-sendToClientBtn.addEventListener('click', () => {
-    alert("This feature is temporarily on hold. LUME requires explicit confirmation before sending documents to clients. Please review the document once more before this capability is enabled.");
+sendToClientBtn.addEventListener('click', async () => {
+    const fileUrl = pdfViewer.src;
+    if (!fileUrl || fileUrl === window.location.href) {
+        alert("No document selected for sending.");
+        return;
+    }
+
+    sendToClientBtn.disabled = true;
+    sendToClientBtn.textContent = "Sending...";
+
+    try {
+        const response = await fetch('/api/send-document', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file_url: new URL(fileUrl).pathname })
+        });
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            appendMessage('bot', `✅ ${data.message}`);
+            previewModal.classList.add('hidden');
+            pdfViewer.src = '';
+        } else {
+            appendMessage('bot', `❌ ${data.message}`);
+        }
+    } catch (err) {
+        console.error("Error sending document:", err);
+        appendMessage('bot', "❌ System error while sending document.");
+    } finally {
+        sendToClientBtn.disabled = false;
+        sendToClientBtn.textContent = "Send to Client";
+    }
 });
 
 closePreviewBtn.addEventListener('click', () => {
     previewModal.classList.add('hidden');
     pdfViewer.src = '';
+    docxViewer.innerHTML = '';
 });
 
 // Close modals on escape key
@@ -316,6 +400,7 @@ document.addEventListener('keydown', (e) => {
         previewModal.classList.add('hidden');
         deleteModal.classList.add('hidden');
         pdfViewer.src = '';
+        docxViewer.innerHTML = '';
     }
 });
 
@@ -323,7 +408,9 @@ window.quickCommand = quickCommand;
 
 document.addEventListener('DOMContentLoaded', () => {
     loadChatHistory();
-    if (!currentThreadId) {
+    if (currentThreadId) {
+        selectThread(currentThreadId);
+    } else {
         appendMessage('bot', 'Welcome. I am LUME. Your business intelligence is loaded and ready. How shall we operate today?');
     }
 

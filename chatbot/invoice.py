@@ -37,7 +37,7 @@ def calculate_invoice(items: list, tax_percent: float = 0) -> dict:
         "total_pending": grand_total
     }
 
-def invoice_handler(message: str, session: dict):
+def invoice_handler(message: str, session: dict, history: list = None):
     """Handles the invoice creation flow, including field collection and calculations."""
     from .intent import extract_fields
     
@@ -70,11 +70,16 @@ def invoice_handler(message: str, session: dict):
     if not client_id and not session["collected_fields"].get("client_email"):
         return f"I see **{client_name}** is a new client. What's their email address so I can set them up?"
 
-    if not client_id:
+    if not client_id and session["collected_fields"].get("client_email"):
         client_id = db.get_or_create_client(
             name=client_name,
             email=session["collected_fields"]["client_email"]
         )
+    elif client_id and session["collected_fields"].get("client_email"):
+        # Update email if it was missing in DB
+        client = db.get_client(client_id)
+        if not client.get("email"):
+            db.update_client_field(client_id, "email", session["collected_fields"]["client_email"])
 
     # Calculation
     items = []
@@ -107,9 +112,10 @@ def invoice_handler(message: str, session: dict):
         "url": f"/docs/invoices/{invoice_num}.pdf",
         "type": "pdf"
     }]
-    # Generate PDF (Staging)
+    # Generate PDF
     pdf_path = f"documents/invoices/{invoice_num}.pdf"
-    # generate_invoice_pdf(invoice_record, pdf_path) # Would call pdf_generator
+    from documents.pdf_generator import generate_invoice_pdf
+    generate_invoice_pdf(invoice_record, pdf_path) 
     
     return (
         f"### Invoice {invoice_num} Generated\n\n"

@@ -8,6 +8,7 @@ from chatbot.proposal import proposal_handler
 from chatbot.invoice import invoice_handler
 from chatbot.reminder import reminder_handler
 from chatbot.query import query_handler, calculate_stats
+from chatbot.gmail_sender import send_gmail
 from storage import db, chats
 
 app = FastAPI(title="LUME - Freelancer Admin Assistant")
@@ -55,21 +56,30 @@ async def chat(request: Request):
     session = sessions[user_id]
     session["thread_id"] = thread_id
     
+    # Get previous chat history for LLM context, max last 10 messages for better window
+    thread = chats.get_thread(thread_id)
+    history = thread.get("messages", [])[:-1] # excluding the recently added user message
+    if len(history) > 10:
+        history = history[-10:]
+    
     # Intent classification
     intent = detect_intent(message)
     if intent != "UNKNOWN" and intent != session["current_intent"]:
         session["current_intent"] = intent
         session["intent_reset"] = True # Flag to trigger new gen vs edit
-        
-    # Route to handler
+    
+    # Route to handler - passing history for context-aware responses
     if session["current_intent"] == "PROPOSAL":
-        reply = proposal_handler(message, session)
+        reply = proposal_handler(message, session, history=history)
     elif session["current_intent"] == "INVOICE":
-        reply = invoice_handler(message, session)
+        reply = invoice_handler(message, session, history=history)
     elif session["current_intent"] == "REMINDER":
-        reply = reminder_handler(message, session)
+        reply = reminder_handler(message, session, history=history)
     else:
-        reply = query_handler(message, session)
+        reply = query_handler(message, session, history=history)
+    
+    # Save Assistant Reply to History
+    chats.append_message(thread_id, "assistant", reply)
     
     # Always send fresh stats for the Bento UI
     raw_db = db.get_raw_database()
@@ -117,6 +127,45 @@ async def get_chat_thread(thread_id: str):
 async def delete_chat_thread(thread_id: str):
     chats.delete_thread(thread_id)
     return {"status": "success"}
+
+class SendDocumentRequest(BaseModel):
+    file_url: str
+
+@app.post("/api/send-document")
+async def send_document(req: SendDocumentRequest):
+    # Convert /docs/proposals/foo.pdf to documents/proposals/foo.pdf
+    if req.file_url.startswith("/docs/"):
+        file_path = "documents/" + req.file_url[6:]
+    else:
+        return {"status": "error", "message": "Invalid file URL"}
+
+    # Find the client associated with this file_path
+    db_data = db.get_raw_database()
+    target_client = None
+    target_proposal = None
+
+    for client in db_data["clients"].values():
+        for prop in client.get("proposals", []):
+            if prop.get("file_path") == file_path:
+                target_client = client
+                target_proposal = prop
+                break
+        if target_client:
+            break
+
+    if not target_client or not target_client.get("email"):
+        return {"status": "error", "message": "Client or client email not found for this document"}
+
+    # Use gmail_sender to send the email with actual attachment
+    subject = f"Document from LUME: {os.path.basename(file_path)}"
+    body = f"Hello {target_client['name']},\n\nPlease find the discussed document attached.\n\nRegards,\nLUME AI"
+    
+    success = send_gmail(target_client["email"], subject, body, attachment_path=file_path)
+    
+    if success:
+        return {"status": "success", "message": f"Document sent to {target_client['email']}"}
+    else:
+        return {"status": "error", "message": "Failed to send email. Check system logs/credentials."}
 
 if __name__ == "__main__":
     import uvicorn

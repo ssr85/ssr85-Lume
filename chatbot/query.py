@@ -1,6 +1,7 @@
 from .llm import call_llm
 from storage import db
 import json
+import re
 
 QUERY_PROMPT = """
 You ARE the LUME Operating System. Root access ENABLED.
@@ -34,19 +35,10 @@ SPECIAL RULE FOR DELETION:
 User Question: "{message}"
 """
 
-def query_handler(message: str, session: dict):
+def query_handler(message: str, session: dict, history: list = None):
     """The Universal Agency Core: Dispatches any root-level system action."""
     raw_db = db.get_raw_database()
     prompt = QUERY_PROMPT.format(raw_db=json.dumps(raw_db), message=message)
-    
-    # Get previous chat history for LLM context, max last 6 messages
-    thread_id = session.get("thread_id")
-    history = []
-    if thread_id:
-        from storage import chats
-        thread = chats.get_thread(thread_id)
-        if thread and "messages" in thread:
-            history = thread["messages"][-7:-1] # excluding the recently added user message
     
     response = call_llm(prompt, history=history)
     
@@ -56,7 +48,6 @@ def query_handler(message: str, session: dict):
             action_data = json.loads(json_str)
             action = action_data.get("action")
             
-            import re
             clean_text = response.split("{")[0].strip()
             clean_text = re.sub(r'(?i)executing:\s*$', '', clean_text).strip()
             clean_text = re.sub(r'(?i)action:\s*$', '', clean_text).strip()
@@ -106,14 +97,9 @@ def query_handler(message: str, session: dict):
         except Exception as e:
             print(f"Agency Dispatch Error: {e}")
             
-    import re
     final_text = response.split("{")[0].strip()
     final_text = re.sub(r'(?i)executing:\s*$', '', final_text).strip()
     final_text = re.sub(r'(?i)action:\s*$', '', final_text).strip()
-    
-    # Save to thread history for context in future messages
-    if thread_id:
-        chats.append_message(thread_id, "assistant", final_text)
     
     return final_text
 

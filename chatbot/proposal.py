@@ -48,7 +48,7 @@ User Instructions:
 Respond with ONLY the full updated markdown content.
 """
 
-def proposal_handler(message: str, session: dict):
+def proposal_handler(message: str, session: dict, history: list = None):
     """Manages the proposal generation flow and editing loop."""
     from .intent import extract_fields
     
@@ -92,6 +92,11 @@ def proposal_handler(message: str, session: dict):
             name=client_name, 
             email=session["collected_fields"]["client_email"]
         )
+    elif client_id and session["collected_fields"].get("client_email"):
+        # Update email if it was missing in DB
+        client = db.get_client(client_id)
+        if not client.get("email"):
+            db.update_client_field(client_id, "email", session["collected_fields"]["client_email"])
 
     # All data ready, generate or edit
     freelancer_name = os.getenv("FREELANCER_NAME", "your assistant")
@@ -137,11 +142,18 @@ def proposal_handler(message: str, session: dict):
     )
     
     # Store Attachment Info for UI
-    session["last_attachments"] = [{
-        "name": pdf_filename,
-        "url": f"/docs/proposals/{pdf_filename}",
-        "type": "pdf"
-    }]
+    session["last_attachments"] = [
+        {
+            "name": pdf_filename,
+            "url": f"/docs/proposals/{pdf_filename}",
+            "type": "pdf"
+        },
+        {
+            "name": docx_filename,
+            "url": f"/docs/proposals/{docx_filename}",
+            "type": "docx"
+        }
+    ]
     
     # Return preview with real links (simulated for now with /docs path)
     # Return focused preview

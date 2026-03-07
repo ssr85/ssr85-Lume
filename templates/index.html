@@ -10,6 +10,8 @@
         rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- DOCX Preview library -->
+    <script src="https://unpkg.com/docx-preview/dist/docx-preview.js"></script>
 </head>
 
 <body>
@@ -85,6 +87,8 @@
             </div>
             <div class="preview-body flex-1 overflow-hidden rounded-lg bg-black/20">
                 <iframe id="pdf-viewer" class="w-full h-full border-none" src=""></iframe>
+                <div id="docx-viewer" class="w-full h-full overflow-auto hidden"
+                    style="background: white; padding: 2rem;"></div>
             </div>
             <div class="modal-footer pt-4 mt-4 flex justify-end gap-4">
                 <button id="send-to-client-btn" class="action-btn text-center"

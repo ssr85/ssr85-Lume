@@ -32,16 +32,51 @@ def get_tone(due_date: str) -> str:
 def reminder_handler(message: str, session: dict):
     """Handles payment reminder generation and confirmation flow."""
     from .intent import extract_fields
+    msg_low = message.lower().strip()
     
+    # Check if we are in a confirmation state
+    if "draft_reminder" in session:
+        if any(kw in msg_low for kw in ["yes", "proceed", "go ahead", "send it", "do it"]):
+            draft = session["draft_reminder"]
+            target_email = session["target_client_email"]
+            
+            # Extract subject and body from draft
+            # Draft format is expected to be "Subject: [subject]\nBody: [body]"
+            subject = "Payment Reminder"
+            body = draft
+            if "Subject:" in draft and "Body:" in draft:
+                parts = draft.split("Body:", 1)
+                subject_part = parts[0].replace("Subject:", "").strip()
+                body_part = parts[1].strip()
+                subject = subject_part
+                body = body_part
+
+            success = send_gmail(target_email, subject, body)
+            
+            # Clear session state
+            del session["draft_reminder"]
+            del session["target_client_email"]
+            
+            if success:
+                return f"✅ **Reminder sent successfully** to {target_email}."
+            else:
+                return "❌ **Failed to send email.** Please check your Gmail App Password in `.env` or system logs."
+        
+        elif any(kw in msg_low for kw in ["no", "stop", "cancel", "don't"]):
+            del session["draft_reminder"]
+            del session["target_client_email"]
+            return "Reminder cancelled. What else can I help you with?"
+
     extracted = extract_fields(message, "REMINDER")
     client_name = extracted.get("client_name")
     
     if not client_name:
+        # Fallback: check if the message itself is a name or contains a name from history
         return "Which client should I send a reminder to?"
 
     # Find the unpaid invoice for this client
     # (Simplified: assumes latest unpaid invoice)
-    db_data = db.load_db()
+    db_data = db.get_raw_database()
     client_id = db.find_client_by_name_and_email(client_name)
     if not client_id:
         return f"I couldn't find a client named '{client_name}'."
