@@ -21,8 +21,10 @@ const pdfViewer = document.getElementById('pdf-viewer');
 const docxViewer = document.getElementById('docx-viewer');
 const closePreviewBtn = document.getElementById('close-preview-btn');
 const downloadPreviewBtn = document.getElementById('download-preview-btn');
+let currentPreviewUrl = null;
 
 async function openPreview(url, name) {
+    currentPreviewUrl = url;
     pdfViewer.classList.add('hidden');
     docxViewer.classList.add('hidden');
     pdfViewer.src = '';
@@ -57,11 +59,12 @@ async function loadChatHistory() {
 
         if (data.threads) {
             data.threads.forEach(t => {
+                const threadDate = new Date(t.created_at || Date.now()).toLocaleDateString();
                 const div = document.createElement('div');
                 div.className = `history-item ${t.id === currentThreadId ? 'active' : ''}`;
                 div.innerHTML = `
                     <div class="history-info" onclick="selectThread('${t.id}')">
-                        <div class="history-date">${date}</div>
+                        <div class="history-date">${threadDate}</div>
                         <div class="history-title">${t.title}</div>
                     </div>
                     <button class="delete-thread-btn" onclick="event.stopPropagation(); deleteThread('${t.id}')">
@@ -264,7 +267,7 @@ function appendMessage(role, text, skipAnimation = false, attachments = []) {
 
             attachContainer.appendChild(thumb);
         });
-        chatWindow.appendChild(attachContainer);
+        card.appendChild(attachContainer);
     }
 
     chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -330,28 +333,6 @@ confirmDeleteBtn.addEventListener('click', async () => {
     pendingDeleteTarget = null;
 });
 
-function openPreview(url, fileName) {
-    pdfViewer.src = '';
-    docxViewer.innerHTML = '';
-    downloadPreviewBtn.href = url;
-    downloadPreviewBtn.setAttribute('download', fileName);
-
-    if (url.endsWith('.pdf')) {
-        pdfViewer.src = url;
-        pdfViewer.classList.remove('hidden');
-        docxViewer.classList.add('hidden');
-    } else if (url.endsWith('.docx')) {
-        // Use Google Docs Viewer for DOCX files
-        docxViewer.innerHTML = `<iframe src="https://docs.google.com/gview?url=${encodeURIComponent(window.location.origin + url)}&embedded=true" style="width:100%; height:100%;" frameborder="0"></iframe>`;
-        docxViewer.classList.remove('hidden');
-        pdfViewer.classList.add('hidden');
-    } else {
-        // Fallback for other file types, or just open in new tab
-        window.open(url, '_blank');
-        return; // Don't show the modal for unsupported types
-    }
-    previewModal.classList.remove('hidden');
-}
 
 // Preview Interceptor (Event Delegation)
 chatWindow.addEventListener('click', (e) => {
@@ -369,8 +350,7 @@ chatWindow.addEventListener('click', (e) => {
 const sendToClientBtn = document.getElementById('send-to-client-btn');
 
 sendToClientBtn.addEventListener('click', async () => {
-    const fileUrl = pdfViewer.src;
-    if (!fileUrl || fileUrl === window.location.href) {
+    if (!currentPreviewUrl) {
         alert("No document selected for sending.");
         return;
     }
@@ -382,7 +362,7 @@ sendToClientBtn.addEventListener('click', async () => {
         const response = await fetch('/api/send-document', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file_url: new URL(fileUrl).pathname })
+            body: JSON.stringify({ file_url: currentPreviewUrl })
         });
         const data = await response.json();
 

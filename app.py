@@ -56,14 +56,14 @@ async def chat(request: Request):
     session = sessions[user_id]
     session["thread_id"] = thread_id
     
-    # Get previous chat history for LLM context, max last 10 messages for better window
+    # Get previous chat history for LLM context, max last 50 messages for better window
     thread = chats.get_thread(thread_id)
     history = thread.get("messages", [])[:-1] # excluding the recently added user message
-    if len(history) > 10:
-        history = history[-10:]
+    if len(history) > 50:
+        history = history[-50:]
     
     # Intent classification
-    intent = detect_intent(message)
+    intent = detect_intent(message, history=history)
     if intent != "UNKNOWN" and intent != session["current_intent"]:
         session["current_intent"] = intent
         session["intent_reset"] = True # Flag to trigger new gen vs edit
@@ -145,13 +145,19 @@ async def send_document(req: SendDocumentRequest):
     target_proposal = None
 
     for client in db_data["clients"].values():
+        # Check Proposals (PDF or DOCX)
         for prop in client.get("proposals", []):
-            if prop.get("file_path") == file_path:
+            if prop.get("pdf_path") == file_path or prop.get("docx_path") == file_path:
                 target_client = client
-                target_proposal = prop
                 break
-        if target_client:
-            break
+        if target_client: break
+        
+        # Check Invoices
+        for inv in client.get("invoices", []):
+            if inv.get("file_path") == file_path:
+                target_client = client
+                break
+        if target_client: break
 
     if not target_client or not target_client.get("email"):
         return {"status": "error", "message": "Client or client email not found for this document"}

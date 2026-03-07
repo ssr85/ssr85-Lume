@@ -41,7 +41,7 @@ def invoice_handler(message: str, session: dict, history: list = None):
     """Handles the invoice creation flow, including field collection and calculations."""
     from .intent import extract_fields
     
-    extracted = extract_fields(message, "INVOICE")
+    extracted = extract_fields(message, "INVOICE", history=history)
     for key, val in extracted.items():
         if val and not session["collected_fields"].get(key):
             session["collected_fields"][key] = val
@@ -101,7 +101,8 @@ def invoice_handler(message: str, session: dict, history: list = None):
         **calc,
         "status": "UNPAID",
         "reminders_sent": [],
-        "payments": []
+        "payments": [],
+        "file_path": f"documents/invoices/{invoice_num}.pdf"
     }
     
     db.save_invoice(client_id, invoice_record)

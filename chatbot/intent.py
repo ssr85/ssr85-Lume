@@ -34,7 +34,7 @@ INTENT_KEYWORDS = {
     "QUERY": ["create", "add", "set", "update", "change", "show", "list", "unpaid", "status", "mark as paid", "total", "calculate", "how much"],
 }
 
-def detect_intent(message: str) -> str:
+def detect_intent(message: str, history: list = None) -> str:
     """Detects user intent via LLM with keyword fallback."""
     msg = message.lower()
     
@@ -49,7 +49,7 @@ def detect_intent(message: str) -> str:
          return "QUERY"
 
     # Try LLM
-    intent = call_llm(INTENT_PROMPT.format(message=message))
+    intent = call_llm(INTENT_PROMPT.format(message=message), history=history)
     if intent and intent.strip() in ["PROPOSAL", "INVOICE", "REMINDER", "QUERY"]:
         return intent.strip()
     
@@ -59,10 +59,10 @@ def detect_intent(message: str) -> str:
             return label
     return "UNKNOWN"
 
-def extract_fields(message: str, intent: str) -> dict:
+def extract_fields(message: str, intent: str, history: list = None) -> dict:
     """Extracts relevant fields from a message based on intent."""
     prompt = EXTRACT_PROMPT.format(message=message, intent=intent)
-    result = call_llm(prompt, json_mode=True)
+    result = call_llm(prompt, json_mode=True, history=history)
     try:
         import json
         return json.loads(result) if result else {}

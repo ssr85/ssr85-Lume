@@ -53,7 +53,7 @@ def proposal_handler(message: str, session: dict, history: list = None):
     from .intent import extract_fields
     
     # Extract fields if not already in session
-    extracted = extract_fields(message, "PROPOSAL")
+    extracted = extract_fields(message, "PROPOSAL", history=history)
     for key, val in extracted.items():
         if val and not session["collected_fields"].get(key):
             session["collected_fields"][key] = val
@@ -106,7 +106,7 @@ def proposal_handler(message: str, session: dict, history: list = None):
         new_content = call_llm(EDIT_PROMPT.format(
             content=session["draft_content"],
             instruction=message
-        ))
+        ), history=history)
         session["draft_content"] = new_content
     else:
         # Initial generation
@@ -115,7 +115,7 @@ def proposal_handler(message: str, session: dict, history: list = None):
             **session["collected_fields"],
             freelancer_background=session["collected_fields"].get("freelancer_background", "Highly experienced professional")
         )
-        session["draft_content"] = call_llm(prompt)
+        session["draft_content"] = call_llm(prompt, history=history)
         session["intent_reset"] = False
 
     # Save and return preview
@@ -138,7 +138,8 @@ def proposal_handler(message: str, session: dict, history: list = None):
         client_id=client_id,
         proposal_metadata=session["collected_fields"],
         content=session["draft_content"],
-        file_path=pdf_path
+        pdf_path=pdf_path,
+        docx_path=docx_path
     )
     
     # Store Attachment Info for UI

@@ -79,7 +79,7 @@ def get_client(client_id: str) -> dict:
     db = load_db()
     return db["clients"].get(client_id)
 
-def save_proposal(client_id: str, proposal_metadata: dict, content: str, file_path: str):
+def save_proposal(client_id: str, proposal_metadata: dict, content: str, pdf_path: str, docx_path: str = None):
     """Saves a proposal link and metadata to the client record."""
     db = load_db()
     if client_id in db["clients"]:
@@ -88,7 +88,8 @@ def save_proposal(client_id: str, proposal_metadata: dict, content: str, file_pa
             **proposal_metadata,
             "content": content,
             "created_at": datetime.now().isoformat(),
-            "file_path": file_path
+            "pdf_path": pdf_path,
+            "docx_path": docx_path
         }
         db["clients"][client_id]["proposals"].append(proposal_entry)
         save_db(db)

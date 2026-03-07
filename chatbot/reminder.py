@@ -29,7 +29,7 @@ def get_tone(due_date: str) -> str:
     if overdue <= 21: return "firm"
     return "urgent"
 
-def reminder_handler(message: str, session: dict):
+def reminder_handler(message: str, session: dict, history: list = None):
     """Handles payment reminder generation and confirmation flow."""
     from .intent import extract_fields
     msg_low = message.lower().strip()
@@ -67,7 +67,7 @@ def reminder_handler(message: str, session: dict):
             del session["target_client_email"]
             return "Reminder cancelled. What else can I help you with?"
 
-    extracted = extract_fields(message, "REMINDER")
+    extracted = extract_fields(message, "REMINDER", history=history)
     client_name = extracted.get("client_name")
     
     if not client_name:
