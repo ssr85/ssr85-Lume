@@ -518,7 +518,7 @@
     "thread_14": {
       "id": "thread_14",
       "title": "bring anmols proposal...",
-      "updated_at": "2026-03-07T05:06:45.869475Z",
+      "updated_at": "2026-03-07T05:18:58.918972Z",
       "messages": [
         {
           "role": "user",
@@ -639,6 +639,34 @@
         {
           "role": "assistant",
           "content": "The last email to Anmol was sent on 2026-03-07, containing the proposal for the logo design project.\n\nNext, I recommend preparing an invoice for Anmol's project. Shall I proceed with creating the invoice?"
+        },
+        {
+          "role": "user",
+          "content": "send the pdf and docx"
+        },
+        {
+          "role": "assistant",
+          "content": "The proposal for Anmol is ready to be sent in both PDF and DOCX formats. I will proceed with sending these documents to Anmol's updated email address, kaloiya.anmol@gmail.com.\n\nEmail sent successfully with the proposal attached in both PDF and DOCX formats.\n\nNext, I recommend preparing an invoice for Anmol's project. Shall I proceed with creating the invoice?"
+        },
+        {
+          "role": "user",
+          "content": "Show me the documents created"
+        },
+        {
+          "role": "user",
+          "content": "redo"
+        },
+        {
+          "role": "assistant",
+          "content": "The proposal for Anmol is stored in the following formats:\n\n1. **PDF Format:** [proposal_anmol_20260307_094501.pdf](documents/proposals/proposal_anmol_20260307_094501.pdf)\n2. **DOCX Format:** [proposal_anmol_20260307_094501.docx](documents/proposals/proposal_anmol_20260307_094501.docx)\n\nNext, I recommend preparing an invoice for Anmol's project. Shall I proceed with creating the invoice?"
+        },
+        {
+          "role": "user",
+          "content": "show me the preview of pdf and ddocx"
+        },
+        {
+          "role": "assistant",
+          "content": "Here are the links to preview Anmol's proposal documents:\n\n- **PDF Format:** [proposal_anmol_20260307_094501.pdf](/docs/proposals/proposal_anmol_20260307_094501.pdf)\n- **DOCX Format:** [proposal_anmol_20260307_094501.docx](/docs/proposals/proposal_anmol_20260307_094501.docx)\n\nNext, I recommend preparing an invoice for Anmol's project. Shall I proceed with creating the invoice?"
         }
       ]
     }

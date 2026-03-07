@@ -26,6 +26,7 @@ os.makedirs("documents/invoices", exist_ok=True)
 # Mount statics and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/docs", StaticFiles(directory="documents"), name="documents")
+app.mount("/documents", StaticFiles(directory="documents"), name="documents_compat")
 templates = Jinja2Templates(directory="templates")
 
 @app.get("/")
