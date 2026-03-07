@@ -1,5 +1,5 @@
 {
-  "current_id": 13,
+  "current_id": 14,
   "threads": {
     "thread_1": {
       "id": "thread_1",
@@ -512,6 +512,21 @@
         {
           "role": "assistant",
           "content": "I will update Anmol's email address to kaloiya.anmol@gmail.com.\n\nUpdating now...\n\nAnmol's email address has been successfully updated. Next, let's proceed with drafting a contract to formalize the agreement for the \"Logo Design\" project. Shall I prepare a contract template for you?"
+        }
+      ]
+    },
+    "thread_14": {
+      "id": "thread_14",
+      "title": "bring anmols proposal...",
+      "updated_at": "2026-03-07T04:53:38.550031Z",
+      "messages": [
+        {
+          "role": "user",
+          "content": "bring anmols proposal and show it to me"
+        },
+        {
+          "role": "assistant",
+          "content": "The proposal for Anmol is ready for your review. Here are the key details:\n\n**Project Title:** Logo Design  \n**Project Description:** The logo is for a cafe in Delhi  \n**Deliverables:** Logo Design  \n**Timeline:** 1 month from now  \n**Budget:** 400 dollars flat fees  \n\nThe proposal document is available at: [proposal_anmol_20260307_094501.pdf](documents/proposals/proposal_anmol_20260307_094501.pdf).\n\nNext, I recommend preparing an invoice for Anmol's project. Would you like me to proceed with creating the invoice?"
         }
       ]
     }
