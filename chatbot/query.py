@@ -1,4 +1,5 @@
 from .llm import call_llm
+from .gmail_sender import send_gmail
 from storage import db
 import json
 import re
@@ -26,16 +27,20 @@ MANDATES (STRICT):
 - DOCUMENT LINKING RULE: When providing links to PDF or DOCX files from {raw_db}, ALWAYS use the format [File Name](/docs/type/filename.ext). You MUST replace the "documents/" prefix with "/docs/" in the URL. Example: [Invoce 1001](/docs/invoices/INV-1001.pdf).
 - Execute first, summarize concisely, then ask the targeted next question.
 
-Actions Available:
+Actions Available (MUST BE VALID JSON):
 - {{ "action": "CREATE_CLIENT", "name": "Name" }}
 - {{ "action": "CREATE_CLIENT", "name": "Name", "email": "email@ex.com", "phone": "...", "gstin": "..." }}
 - {{ "action": "REQUEST_DELETE_CLIENT", "name": "Name" }}
 - {{ "action": "UPDATE_FIELD", "client_id": "ID", "field": "address.city", "value": "val" }}
 - {{ "action": "RECORD_PAYMENT", "invoice_num": "INV-X", "amount": 0.0, "method": "Transfer" }}
 - {{ "action": "LOG_PROJECT", "client_id": "ID", "title": "X", "description": "Y" }}
+- {{ "action": "SEND_EMAIL", "to_email": "email@example.com", "subject": "Your Document", "body": "...", "attachment_path": "documents/..." }} (Use exact pdf_path, docx_path, or file_path from {raw_db})
 
+IMPORTANT: You must output ONLY ONE action block per message. For SEND_EMAIL, you MUST use the JSON syntax above. Do NOT use the bracket [ACTION:...] syntax for emails.
+
+---
 SPECIAL RULE FOR DELETION:
-- If the user asks to delete a contact or project, do NOT act immediately. You MUST respond with this exact block at the very end of your message so the frontend can intercept it: [ACTION:DELETE_MODAL:{{"name":"Contact Name", "type":"client"}}]
+- If the user asks to delete a contact or project, do NOT use JSON. You MUST respond with this exact block at the very end of your message so the frontend can intercept it: [ACTION:DELETE_MODAL:{{"name":"Contact Name", "type":"client"}}]
 
 User Question: "{message}"
 """
@@ -58,7 +63,6 @@ def query_handler(message: str, session: dict, history: list = None):
             clean_text = re.sub(r'(?i)action:\s*$', '', clean_text).strip()
             
             if action == "CREATE_CLIENT":
-                cid = db.get_or_create_client(name=action_data.get("name"))
                 cid = db.get_or_create_client(
                     name=action_data.get("name"),
                     email=action_data.get("email"),
@@ -104,6 +108,18 @@ def query_handler(message: str, session: dict, history: list = None):
                     action_data.get("status")
                 )
                 response = "✅ Project status updated. \n\n" + clean_text
+                
+            elif action == "SEND_EMAIL":
+                success = send_gmail(
+                    to_email=action_data.get("to_email"),
+                    subject=action_data.get("subject", "Document from LUME"),
+                    body=action_data.get("body", "Please find the attached document."),
+                    attachment_path=action_data.get("attachment_path")
+                )
+                if success:
+                    response = f"✅ Email sent successfully to {action_data.get('to_email')}. \n\n" + clean_text
+                else:
+                    response = f"❌ Failed to send email to {action_data.get('to_email')}. \n\n" + clean_text
 
         except Exception as e:
             print(f"Agency Dispatch Error: {e}")

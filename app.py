@@ -64,7 +64,7 @@ async def chat(request: Request):
         history = history[-50:]
     
     # Intent classification
-    intent = detect_intent(message, history=history)
+    intent = detect_intent(message, history=history, current_intent=session.get("current_intent"))
     if intent != "UNKNOWN" and intent != session["current_intent"]:
         session["current_intent"] = intent
         session["intent_reset"] = True # Flag to trigger new gen vs edit

@@ -3,10 +3,10 @@ from .llm import call_llm
 INTENT_PROMPT = """
 You are an intent classifier for LUME, a freelancer's admin assistant.
 Classify the following user message into exactly one of these intents:
-- PROPOSAL: User wants to generate a project proposal.
-- INVOICE: User wants to create/generate an invoice.
-- REMINDER: User wants to send a payment reminder to a client.
-- QUERY: User is asking about stored data (unpaid invoices, client info, marking as paid).
+- PROPOSAL: User wants to draft, create, or generate a NEW project proposal.
+- INVOICE: User wants to draft, create, or generate a NEW invoice.
+- REMINDER: User wants to draft or generate a payment reminder.
+- QUERY: User wants to EMAIL/SEND an EXISTING document (like a proposal or invoice), ask about stored data, or update records.
 
 Respond with ONLY the intent label.
 
@@ -34,19 +34,28 @@ INTENT_KEYWORDS = {
     "QUERY": ["create", "add", "set", "update", "change", "show", "list", "unpaid", "status", "mark as paid", "total", "calculate", "how much"],
 }
 
-def detect_intent(message: str, history: list = None) -> str:
+def detect_intent(message: str, history: list = None, current_intent: str = None) -> str:
     """Detects user intent via LLM with keyword fallback."""
     msg = message.lower()
     
-    # Aggressive Agency Routing: Force into Agency Core if mutation keywords OR potential names are detected
-    mutation_keywords = ["create", "add", "set", "update", "total", "calculate", "new", "record"]
-    if any(kw in msg for kw in mutation_keywords):
+    # If they are explicitly asking to send a document that already exists
+    if "send" in msg and any(doc in msg for doc in ["proposal", "invoice", "document", "file", "pdf", "docx", "email"]):
         return "QUERY"
         
-    # Heuristic for Names (Capitalized words in a short sentence)
-    words = message.split()
-    if len(words) < 15 and any(w[0].isupper() for w in words[1:]): # Basic name detection
-         return "QUERY"
+    in_flow = current_intent in ["PROPOSAL", "INVOICE", "REMINDER"]
+    
+    if not in_flow:
+        # Avoid aggressive QUERY routing if the user is explicitly trying to generate documents
+        if not any(doc in msg for doc in ["invoice", "bill", "proposal", "pitch"]):
+            # Aggressive Agency Routing: Force into Agency Core if mutation keywords OR potential names are detected
+            mutation_keywords = ["create", "add", "set", "update", "total", "calculate", "new", "record", "email"]
+            if any(kw in msg for kw in mutation_keywords):
+                return "QUERY"
+                
+            # Heuristic for Names (Capitalized words in a short sentence)
+            words = message.split()
+            if len(words) < 15 and any(w[0].isupper() for w in words[1:]): # Basic name detection
+                 return "QUERY"
 
     # Try LLM
     intent = call_llm(INTENT_PROMPT.format(message=message), history=history)

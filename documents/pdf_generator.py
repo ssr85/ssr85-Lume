@@ -47,15 +47,44 @@ def generate_invoice_pdf(invoice_data: dict, output_path: str):
     )
     
     story.append(Paragraph(f"INVOICE: {invoice_data['invoice_number']}", header_style))
-    story.append(Paragraph(f"Date: {invoice_data['invoice_date']}", styles['Normal']))
-    story.append(Paragraph(f"Due Date: {invoice_data['due_date']}", styles['Normal']))
-    story.append(Spacer(1, 20))
+    
+    # Invoice Metadata
+    meta_style = ParagraphStyle('Meta', parent=styles['Normal'], fontSize=10, textColor=colors.HexColor("#666666"))
+    story.append(Paragraph(f"<b>Date:</b> {invoice_data['invoice_date']}", meta_style))
+    story.append(Paragraph(f"<b>Due Date:</b> {invoice_data['due_date']}", meta_style))
+    story.append(Spacer(1, 25))
+
+    # Billed To Section
+    client = invoice_data.get('client', {})
+    if client:
+        story.append(Paragraph("<b>BILLED TO:</b>", styles['Heading4']))
+        story.append(Paragraph(f"<b>{client.get('name', '')}</b>", styles['Normal']))
+        if client.get('company'):
+            story.append(Paragraph(client.get('company'), styles['Normal']))
+        if client.get('email'):
+            story.append(Paragraph(client.get('email'), styles['Normal']))
+        address = client.get('address', {})
+        if address.get('city') or address.get('country'):
+            city_str = address.get('city', '')
+            country_str = address.get('country', '')
+            loc = f"{city_str}, {country_str}".strip(" ,")
+            story.append(Paragraph(loc, styles['Normal']))
+        if client.get('gstin'):
+            story.append(Paragraph(f"GSTIN: {client.get('gstin')}", styles['Normal']))
+        story.append(Spacer(1, 20))
+
+    project_name = invoice_data.get('project_name')
+    if project_name:
+        story.append(Paragraph(f"<b>For Project:</b> {project_name}", styles['Heading4']))
+        story.append(Spacer(1, 15))
 
     # Table for items
     data = [["Description", "Hours", "Rate", "Subtotal"]]
     for item in invoice_data['items']:
+        # Wrap description in Paragraph to prevent text overflow
+        desc_p = Paragraph(item['description'], styles['Normal'])
         data.append([
-            item['description'],
+            desc_p,
             str(item['hours']),
             f"${item['rate']}",
             f"${item['subtotal']}"

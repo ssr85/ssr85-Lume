@@ -47,7 +47,7 @@ def invoice_handler(message: str, session: dict, history: list = None):
             session["collected_fields"][key] = val
             
     # Required fields
-    required = ["client_name", "work_items", "rate"]
+    required = ["client_name", "project_name", "work_items", "rate"]
     missing = [f for f in required if not session["collected_fields"].get(f)]
     
     # Confirmation Keyword Detection (Direct Action)
@@ -58,8 +58,9 @@ def invoice_handler(message: str, session: dict, history: list = None):
         if not is_confirmed:
             field_labels = {
                 "client_name": "client name",
-                "work_items": "description of work",
-                "rate": "hourly rate"
+                "project_name": "project title or name",
+                "work_items": "detailed description of work",
+                "rate": "hourly rate or flat fee"
             }
             return f"I'm ready to create that invoice. Could you provide the **{field_labels[missing[0]]}**?"
 
@@ -85,7 +86,12 @@ def invoice_handler(message: str, session: dict, history: list = None):
     items = []
     # Assume simple extraction for now (one item or split by comma)
     if isinstance(session["collected_fields"]["work_items"], str):
-        items = [{"description": session["collected_fields"]["work_items"], "hours": session["collected_fields"].get("hours", 1), "rate": session["collected_fields"]["rate"]}]
+        # Enhance the detailed description using the LLM
+        raw_desc = session["collected_fields"]["work_items"]
+        proj_name = session["collected_fields"].get("project_name", "")
+        expand_prompt = f"Write a professional, detailed 1-2 sentence description for this invoice line item. Project: {proj_name}. Notes: {raw_desc}."
+        detailed_desc = call_llm(expand_prompt).strip()
+        items = [{"description": detailed_desc, "hours": session["collected_fields"].get("hours", 1), "rate": session["collected_fields"]["rate"]}]
     else:
         items = session["collected_fields"]["work_items"]
         
@@ -115,8 +121,15 @@ def invoice_handler(message: str, session: dict, history: list = None):
     }]
     # Generate PDF
     pdf_path = f"documents/invoices/{invoice_num}.pdf"
+    
+    invoice_for_pdf = {
+        **invoice_record,
+        "client": db.get_client(client_id),
+        "project_name": session["collected_fields"].get("project_name", "")
+    }
+    
     from documents.pdf_generator import generate_invoice_pdf
-    generate_invoice_pdf(invoice_record, pdf_path) 
+    generate_invoice_pdf(invoice_for_pdf, pdf_path) 
     
     return (
         f"### Invoice {invoice_num} Generated\n\n"
