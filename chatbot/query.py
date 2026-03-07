@@ -28,6 +28,7 @@ MANDATES (STRICT):
 
 Actions Available:
 - {{ "action": "CREATE_CLIENT", "name": "Name" }}
+- {{ "action": "CREATE_CLIENT", "name": "Name", "email": "email@ex.com", "phone": "...", "gstin": "..." }}
 - {{ "action": "REQUEST_DELETE_CLIENT", "name": "Name" }}
 - {{ "action": "UPDATE_FIELD", "client_id": "ID", "field": "address.city", "value": "val" }}
 - {{ "action": "RECORD_PAYMENT", "invoice_num": "INV-X", "amount": 0.0, "method": "Transfer" }}
@@ -58,6 +59,12 @@ def query_handler(message: str, session: dict, history: list = None):
             
             if action == "CREATE_CLIENT":
                 cid = db.get_or_create_client(name=action_data.get("name"))
+                cid = db.get_or_create_client(
+                    name=action_data.get("name"),
+                    email=action_data.get("email"),
+                    phone=action_data.get("phone"),
+                    gstin=action_data.get("gstin")
+                )
                 response = f"✅ Created client record ({cid}). \n\n" + clean_text
             
             elif action == "RECORD_PAYMENT":
