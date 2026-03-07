@@ -61,6 +61,8 @@ def query_handler(message: str, session: dict, history: list = None):
             clean_text = response.split("{")[0].strip()
             clean_text = re.sub(r'(?i)executing:\s*$', '', clean_text).strip()
             clean_text = re.sub(r'(?i)action:\s*$', '', clean_text).strip()
+            clean_text = re.sub(r'```json\s*$', '', clean_text).strip()
+            clean_text = re.sub(r'```\s*$', '', clean_text).strip()
             
             if action == "CREATE_CLIENT":
                 cid = db.get_or_create_client(

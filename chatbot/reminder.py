@@ -2,12 +2,15 @@ from .llm import call_llm
 from storage import db
 from datetime import datetime
 from .gmail_sender import send_gmail
+import os
 
 REMINDER_PROMPT = """
 Write a professional payment reminder for {client_name}.
 Tone: {tone} (gentle = warm/friendly, firm = direct/polite, urgent = assertive).
 
 Details:
+- Client Name: {client_name}
+- Project Name: {project_name}
 - Invoice: {invoice_num}
 - Original Amount: ${total_amount}
 - Amount Paid: ${total_paid}
@@ -19,6 +22,12 @@ Details:
 Write the email as:
 Subject: [subject]
 Body: [body]
+
+Make sure the body clearly mentions:
+1. The Project Name ({project_name})
+2. The Total Amount paid so far (${total_paid})
+3. The exact Pending Balance remaining (${total_pending})
+4. That the updated invoice is attached.
 """
 
 def get_tone(due_date: str) -> str:
@@ -51,11 +60,14 @@ def reminder_handler(message: str, session: dict, history: list = None):
                 subject = subject_part
                 body = body_part
 
-            success = send_gmail(target_email, subject, body)
+            attachment_path = session.get("target_attachment_path")
+            success = send_gmail(target_email, subject, body, attachment_path=attachment_path)
             
             # Clear session state
             del session["draft_reminder"]
             del session["target_client_email"]
+            if "target_attachment_path" in session:
+                del session["target_attachment_path"]
             
             if success:
                 return f"✅ **Reminder sent successfully** to {target_email}."
@@ -65,6 +77,8 @@ def reminder_handler(message: str, session: dict, history: list = None):
         elif any(kw in msg_low for kw in ["no", "stop", "cancel", "don't"]):
             del session["draft_reminder"]
             del session["target_client_email"]
+            if "target_attachment_path" in session:
+                del session["target_attachment_path"]
             return "Reminder cancelled. What else can I help you with?"
 
     extracted = extract_fields(message, "REMINDER", history=history)
@@ -93,18 +107,19 @@ def reminder_handler(message: str, session: dict, history: list = None):
     prompt = REMINDER_PROMPT.format(
         client_name=client_name,
         tone=tone,
+        project_name=invoice.get("project_name", "your ongoing project"),
         invoice_num=invoice["invoice_number"],
         total_amount=invoice["grand_total"],
-        total_paid=invoice["total_paid"],
-        total_pending=invoice["total_pending"],
+        total_paid=invoice.get("total_paid", 0),
+        total_pending=invoice.get("total_pending", invoice["grand_total"]),
         due_date=invoice["due_date"],
         days_overdue=(datetime.now() - datetime.strptime(invoice["due_date"], "%Y-%m-%d")).days,
         freelancer_name=os.getenv("FREELANCER_NAME", "your assistant")
     )
-    
     draft = call_llm(prompt)
     session["draft_reminder"] = draft
     session["target_client_email"] = client["email"]
+    session["target_attachment_path"] = invoice.get("file_path", f"documents/invoices/{invoice['invoice_number']}.pdf")
     
     return (
         f"### Reminder Draft ({tone.capitalize()} Tone)\n\n{draft}\n\n"

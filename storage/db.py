@@ -155,6 +155,18 @@ def add_payment(invoice_num: str, amount: float, method: str):
                 else:
                     inv["status"] = "PARTIAL"
                 
+                # Regenerate PDF to reflect updated payment status
+                try:
+                    from documents.pdf_generator import generate_invoice_pdf
+                    pdf_path = inv.get("file_path", f"documents/invoices/{invoice_num}.pdf")
+                    invoice_for_pdf = {
+                        **inv,
+                        "client": client
+                    }
+                    generate_invoice_pdf(invoice_for_pdf, pdf_path)
+                except Exception as e:
+                    print(f"Failed to regenerate PDF on payment: {e}")
+                
                 save_db(db_data)
                 return True
     return False

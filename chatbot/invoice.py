@@ -46,6 +46,30 @@ def invoice_handler(message: str, session: dict, history: list = None):
         if val and not session["collected_fields"].get(key):
             session["collected_fields"][key] = val
             
+    # Auto-fill missing fields from database if client and project are known
+    if session["collected_fields"].get("client_name") and session["collected_fields"].get("project_name"):
+        client_id = db.find_client_by_name_and_email(session["collected_fields"]["client_name"])
+        if client_id:
+            client = db.get_client(client_id)
+            proj_name = session["collected_fields"]["project_name"].lower()
+            
+            # 1. Search projects list
+            matched_proj = next((p for p in client.get("projects", []) if p.get("title", "").lower() == proj_name), None)
+            
+            # 2. Fallback to proposals list
+            if not matched_proj:
+                matched_proj = next((p for p in client.get("proposals", []) if p.get("project_title", "").lower() == proj_name), None)
+            
+            if matched_proj:
+                if not session["collected_fields"].get("work_items"):
+                    session["collected_fields"]["work_items"] = matched_proj.get("deliverables", matched_proj.get("project_description", matched_proj.get("description", "Project Deliverables")))
+                if not session["collected_fields"].get("rate"):
+                    import re
+                    budget_str = str(matched_proj.get("budget", ""))
+                    nums = re.findall(r'\d+', budget_str.replace(",", ""))
+                    if nums:
+                        session["collected_fields"]["rate"] = float(nums[0])
+                        
     # Required fields
     required = ["client_name", "project_name", "work_items", "rate"]
     missing = [f for f in required if not session["collected_fields"].get(f)]
@@ -82,6 +106,36 @@ def invoice_handler(message: str, session: dict, history: list = None):
         if not client.get("email"):
             db.update_client_field(client_id, "email", session["collected_fields"]["client_email"])
 
+    # Check if an UNPAID or PARTIAL invoice already exists for this project
+    existing_invoice = None
+    if client_id and session["collected_fields"].get("project_name"):
+        client = db.get_client(client_id)
+        proj_name = session["collected_fields"]["project_name"].lower()
+        for inv in client.get("invoices", []):
+            if inv.get("project_name", "").lower() == proj_name and inv.get("status") in ["UNPAID", "PARTIAL"]:
+                existing_invoice = inv
+                break
+                
+    if existing_invoice:
+        # Avoid creating a duplicate. Regenerate the PDF for the existing invoice (to apply any new layouts) and return it.
+        try:
+            from documents.pdf_generator import generate_invoice_pdf
+            pdf_path = existing_invoice.get("file_path", f"documents/invoices/{existing_invoice['invoice_number']}.pdf")
+            invoice_for_pdf = {
+                **existing_invoice,
+                "client": db.get_client(client_id)
+            }
+            generate_invoice_pdf(invoice_for_pdf, pdf_path)
+        except Exception as e:
+            print(f"Error regenerating PDF: {e}")
+            
+        session.pop("current_intent", None)
+        session.pop("collected_fields", None)
+        return (f"### Invoice {existing_invoice['invoice_number']} retrieved\n\n"
+                f"I found an existing pending invoice for **{client_name}** "
+                f"totaling **${existing_invoice['grand_total']}** with **${existing_invoice['total_pending']}** remaining.\n\n"
+                f"Preview: [**Open PDF Preview**](/{pdf_path})")
+
     # Calculation
     items = []
     # Assume simple extraction for now (one item or split by comma)
@@ -89,8 +143,14 @@ def invoice_handler(message: str, session: dict, history: list = None):
         # Enhance the detailed description using the LLM
         raw_desc = session["collected_fields"]["work_items"]
         proj_name = session["collected_fields"].get("project_name", "")
-        expand_prompt = f"Write a professional, detailed 1-2 sentence description for this invoice line item. Project: {proj_name}. Notes: {raw_desc}."
+        expand_prompt = (f"Write a professional, detailed 1-2 sentence description for this invoice line item. "
+                         f"Project: {proj_name}. Notes: {raw_desc}. "
+                         f"CRITICAL: Respond ONLY with the description text. Do NOT include any conversational filler, greetings, or next steps recommendations.")
         detailed_desc = call_llm(expand_prompt).strip()
+        # Clean up stray quotes if the LLM adds them
+        if detailed_desc.startswith('"') and detailed_desc.endswith('"'):
+            detailed_desc = detailed_desc[1:-1]
+            
         items = [{"description": detailed_desc, "hours": session["collected_fields"].get("hours", 1), "rate": session["collected_fields"]["rate"]}]
     else:
         items = session["collected_fields"]["work_items"]
@@ -108,7 +168,8 @@ def invoice_handler(message: str, session: dict, history: list = None):
         "status": "UNPAID",
         "reminders_sent": [],
         "payments": [],
-        "file_path": f"documents/invoices/{invoice_num}.pdf"
+        "file_path": f"documents/invoices/{invoice_num}.pdf",
+        "project_name": session["collected_fields"].get("project_name", "")
     }
     
     db.save_invoice(client_id, invoice_record)
@@ -124,8 +185,7 @@ def invoice_handler(message: str, session: dict, history: list = None):
     
     invoice_for_pdf = {
         **invoice_record,
-        "client": db.get_client(client_id),
-        "project_name": session["collected_fields"].get("project_name", "")
+        "client": db.get_client(client_id)
     }
     
     from documents.pdf_generator import generate_invoice_pdf
