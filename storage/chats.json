@@ -518,7 +518,7 @@
     "thread_14": {
       "id": "thread_14",
       "title": "bring anmols proposal...",
-      "updated_at": "2026-03-07T05:18:58.918972Z",
+      "updated_at": "2026-03-07T05:20:46.336025Z",
       "messages": [
         {
           "role": "user",
@@ -667,6 +667,14 @@
         {
           "role": "assistant",
           "content": "Here are the links to preview Anmol's proposal documents:\n\n- **PDF Format:** [proposal_anmol_20260307_094501.pdf](/docs/proposals/proposal_anmol_20260307_094501.pdf)\n- **DOCX Format:** [proposal_anmol_20260307_094501.docx](/docs/proposals/proposal_anmol_20260307_094501.docx)\n\nNext, I recommend preparing an invoice for Anmol's project. Shall I proceed with creating the invoice?"
+        },
+        {
+          "role": "user",
+          "content": "send these files to kaloiya.anmol@gmail.com"
+        },
+        {
+          "role": "assistant",
+          "content": "The proposal documents for Anmol have been sent to kaloiya.anmol@gmail.com. The files included are:\n\n- [Proposal PDF](/docs/proposals/proposal_anmol_20260307_094501.pdf)\n- [Proposal DOCX](/docs/proposals/proposal_anmol_20260307_094501.docx)\n\nNext, I recommend preparing an invoice for Anmol's project. Shall I proceed with creating the invoice?"
         }
       ]
     }
