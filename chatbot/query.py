@@ -45,12 +45,12 @@ SPECIAL RULE FOR DELETION:
 User Question: "{message}"
 """
 
-def query_handler(message: str, session: dict, history: list = None):
+def query_handler(message: str, session: dict, history: list = None, system_prompt: str = None):
     """The Universal Agency Core: Dispatches any root-level system action."""
     raw_db = db.get_raw_database()
     prompt = QUERY_PROMPT.format(raw_db=json.dumps(raw_db), message=message)
     
-    response = call_llm(prompt, history=history)
+    response = call_llm(prompt, history=history, system_message=system_prompt)
     
     if "{" in response and "}" in response:
         try:
@@ -71,6 +71,7 @@ def query_handler(message: str, session: dict, history: list = None):
                     phone=action_data.get("phone"),
                     gstin=action_data.get("gstin")
                 )
+                session["selected_client_id"] = cid
                 response = f"✅ Created client record ({cid}). \n\n" + clean_text
             
             elif action == "RECORD_PAYMENT":

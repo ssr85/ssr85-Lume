@@ -4,6 +4,9 @@
 
 Every message the freelancer sends is first classified into one of four intents before any processing begins. This classification step is called **Intent Detection**. It is handled by a centralized LLM wrapper (`chatbot/llm.py`) with a keyword fallback mechanism.
 
+> [!NOTE]
+> All intent detection and subsequent logic now utilize the **Client Memory** and **Preferences** injected into the System Prompt, ensuring that even classification can be context-aware if necessary.
+
 ---
 
 ## Intent Categories

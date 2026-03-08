@@ -17,13 +17,16 @@ When the intent is `REMINDER`, the chatbot generates a professional payment remi
 
 ---
 
-## Tone Levels
+## Tone Levels & Memory Influence
 
 | Overdue Duration | Tone | Character |
 |---|---|---|
 | **1-7 days** | Gentle | Friendly reminder, assumes the client forgot. Warm and non-pressuring. |
 | **8-21 days** | Firm | Polite but direct. Makes clear the payment is overdue and expected promptly. |
 | **22+ days** | Urgent | Professional but firm. May reference consequences such as work pause or late fees. |
+
+> [!IMPORTANT]
+> Specific **Tone Preferences** or **Archived Rules** stored in the client's **Memory** (e.g., "Sarah appreciates extra-gentle reminders regardless of delay") will override these default tone levels.
 
 ### Tone Detection Logic
 

@@ -5,6 +5,7 @@ const userInput = document.getElementById('user-input');
 const sendBtn = document.getElementById('send-btn');
 const newChatBtn = document.getElementById('new-chat-btn');
 const historyList = document.getElementById('history-list');
+const archiveChatBtn = document.getElementById('archive-chat-btn');
 
 // Delete Modal Elements
 let pendingDeleteTarget = null;
@@ -65,7 +66,10 @@ async function loadChatHistory() {
                 div.innerHTML = `
                     <div class="history-info" onclick="selectThread('${t.id}')">
                         <div class="history-date">${threadDate}</div>
-                        <div class="history-title">${t.title}</div>
+                        <div class="history-title">
+                            ${t.archived ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; opacity: 0.7;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>' : ''}
+                            ${t.title}
+                        </div>
                     </div>
                     <button class="delete-thread-btn" onclick="event.stopPropagation(); deleteThread('${t.id}')">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
@@ -76,6 +80,24 @@ async function loadChatHistory() {
         }
     } catch (e) {
         console.error("Error loading chat history", e);
+    }
+}
+
+function toggleInputStatus(disabled) {
+    userInput.disabled = disabled;
+    sendBtn.disabled = disabled;
+    archiveChatBtn.disabled = disabled;
+    if (disabled) {
+        userInput.placeholder = "This chat is archived and read-only.";
+        archiveChatBtn.style.opacity = "0.5";
+        archiveChatBtn.style.cursor = "not-allowed";
+        archiveChatBtn.textContent = "Archived";
+    } else {
+        userInput.placeholder = "Enter command...";
+        archiveChatBtn.style.opacity = "1";
+        archiveChatBtn.style.cursor = "pointer";
+        archiveChatBtn.textContent = "Archive Chat";
+        userInput.focus();
     }
 }
 
@@ -96,6 +118,9 @@ async function selectThread(id) {
                 appendMessage(type, msg.content, true); // skip animation
             });
             chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            // Lock/Unlock input based on archival state
+            toggleInputStatus(!!data.thread.archived);
         }
     } catch (e) {
         console.error("Error loading thread", e);
@@ -124,6 +149,8 @@ newChatBtn.addEventListener('click', () => {
     currentThreadId = null;
     localStorage.removeItem('lume_current_thread_id');
     chatWindow.innerHTML = '';
+
+    toggleInputStatus(false);
 
     // Hide progress bar just in case
     const progressContainer = document.getElementById('progress-container');
@@ -281,12 +308,67 @@ function formatMarkdown(text) {
     return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="chat-link" target="_blank">$1</a>')
         .replace(/### (.*?)\n/g, '<h3 style="font-family: var(--headline-serif); margin:1rem 0 0.5rem 0;">$1</h3>')
+        .replace(/^- (.*?)$/gm, '<li style="margin-left: 1.5rem; list-style-type: disc;">$1</li>')
         .replace(/\n/g, '<br>');
 }
 
 sendBtn.addEventListener('click', sendMessage);
 userInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
+});
+
+// Archive Chat Event Listener
+archiveChatBtn.addEventListener('click', async () => {
+    if (!currentThreadId) {
+        appendMessage('bot', "No active chat to archive.");
+        return;
+    }
+
+    const clientName = prompt("Enter the Exact Client Name to archive this chat memory under:");
+    if (!clientName) return;
+
+    // Get the client ID from the backend.
+    archiveChatBtn.disabled = true;
+    archiveChatBtn.textContent = "Archiving...";
+
+    try {
+        const response = await fetch(`/api/chats/${currentThreadId}/archive`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ client_id: clientName }) // Backend now resolves name to ID
+        });
+
+        const data = await response.json();
+        if (data.status === 'success') {
+            const ext = data.extraction;
+            let summaryHtml = `### ✅ Chat Archived & Memory Updated\n\n`;
+            summaryHtml += `**Summary:** ${ext.summary}\n\n`;
+
+            if (ext.memory) summaryHtml += `**New Memory:** ${ext.memory}\n\n`;
+
+            const prefs = Object.entries(ext.preferences);
+            if (prefs.length > 0) {
+                summaryHtml += `**Updated Preferences:**\n`;
+                prefs.forEach(([k, v]) => {
+                    summaryHtml += `- ${k}: ${v}\n`;
+                });
+            }
+
+            appendMessage('bot', summaryHtml);
+            toggleInputStatus(true);
+            loadChatHistory(); // Update 'archived' state icons if implemented
+        } else {
+            appendMessage('bot', `❌ Archival Failed: ${data.message}`);
+        }
+    } catch (err) {
+        console.error("Error archiving chat:", err);
+        appendMessage('bot', "❌ System error while archiving chat.");
+    } finally {
+        if (!currentThreadId || !archiveChatBtn.disabled) {
+            archiveChatBtn.disabled = false;
+            archiveChatBtn.textContent = "Archive Chat";
+        }
+    }
 });
 
 // Modal Event Listeners
@@ -407,6 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         appendMessage('bot', 'Welcome. I am LUME. Your business intelligence is loaded and ready. How shall we operate today?');
     }
+    userInput.focus();
 
     // Add Lume-inance if it still exists
     const lumeInance = document.querySelector('.lume-inance');

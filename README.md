@@ -17,7 +17,8 @@ Freelancers lose significant unpaid time every week writing proposals, generatin
 | **Proposal Generator** | Generates full professional proposals from a short project brief |
 | **Invoice Generator** | Creates formatted, downloadable PDF invoices from logged hours and rates |
 | **Payment Reminder** | Drafts tone-adjusted reminders and sends them directly via Gmail |
-| **Client Data Management** | Stores clients, projects, invoices, and reminder history |
+| **Memory Management** | Archives chats to remember client "rules", preferences, and history |
+| **Client Data Management** | Stores clients, projects, invoices, and interaction memory |
 | **Invoice Status Tracking** | Mark invoices as paid/unpaid/overdue through chat |
 
 ---
@@ -48,6 +49,7 @@ freelancer-chatbot/
 |   |-- invoice.py          # Invoice generation & part-payments
 |   |-- reminder.py         # Payment reminder logic
 |   |-- query.py            # Data query handler
+|   |-- memory.py           # extraction of client context & rules
 |   +-- gmail_sender.py     # Gmail send via smtplib
 |-- storage/
 |   |-- db.py               # JSON storage helpers (ClientID PK)
@@ -110,6 +112,12 @@ Open `http://localhost:5000` in your browser.
 
 "Show me all unpaid invoices"
   Triggers: Invoice Status Query
+
+"Note: Sarah at BrightLeaf hates being called on Mondays"
+  Triggers: Memory Archival (when Archived)
+
+"How should I approach the next email to PeakForm?"
+  Triggers: Injected Context Reasoning
 ```
 
 ---
@@ -123,3 +131,4 @@ Open `http://localhost:5000` in your browser.
 - [PAYMENT_REMINDERS.md](PAYMENT_REMINDERS.md) -- Reminder tone logic and send flow
 - [GMAIL_SETUP.md](GMAIL_SETUP.md) -- Gmail App Password configuration
 - [DATA_STORAGE.md](DATA_STORAGE.md) -- Storage schema and retrieval
+- [memory.md](memory.md) -- Rules and logic for client memory management

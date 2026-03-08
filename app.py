@@ -9,6 +9,7 @@ from chatbot.invoice import invoice_handler
 from chatbot.reminder import reminder_handler
 from chatbot.query import query_handler, calculate_stats
 from chatbot.gmail_sender import send_gmail
+from chatbot.memory import archive_chat
 from storage import db, chats
 
 app = FastAPI(title="LUME - Freelancer Admin Assistant")
@@ -52,10 +53,28 @@ async def chat(request: Request):
     user_id = "default_user" # Simplified for MVP
     
     if user_id not in sessions:
-        sessions[user_id] = {"collected_fields": {}, "pending_fields": [], "current_intent": None}
+        sessions[user_id] = {"collected_fields": {}, "pending_fields": [], "current_intent": None, "selected_client_id": None}
     
     session = sessions[user_id]
     session["thread_id"] = thread_id
+    
+    # Build dynamic system prompt with client context if available
+    from chatbot.llm import SYSTEM_MASTER_CORE
+    import json
+    system_prompt = SYSTEM_MASTER_CORE
+    
+    if session.get("selected_client_id"):
+        client = db.get_client(session["selected_client_id"])
+        if client:
+            memory_str = client.get("memory", "")
+            prefs_str = json.dumps(client.get("preferences", {}))
+            if memory_str or prefs_str != "{}":
+                system_prompt += f"\n\nCURRENT CLIENT CONTEXT:\n"
+                if memory_str:
+                    system_prompt += f"Memory/Rules: {memory_str}\n"
+                if prefs_str != "{}":
+                    system_prompt += f"Preferences: {prefs_str}\n"
+                system_prompt += "You MUST adhere strictly to these preferences and take this memory into account when assisting with this client."
     
     # Get previous chat history for LLM context, max last 50 messages for better window
     thread = chats.get_thread(thread_id)
@@ -69,15 +88,15 @@ async def chat(request: Request):
         session["current_intent"] = intent
         session["intent_reset"] = True # Flag to trigger new gen vs edit
     
-    # Route to handler - passing history for context-aware responses
+    # Route to handler - passing history and system_prompt for context-aware responses
     if session["current_intent"] == "PROPOSAL":
-        reply = proposal_handler(message, session, history=history)
+        reply = proposal_handler(message, session, history=history, system_prompt=system_prompt)
     elif session["current_intent"] == "INVOICE":
-        reply = invoice_handler(message, session, history=history)
+        reply = invoice_handler(message, session, history=history, system_prompt=system_prompt)
     elif session["current_intent"] == "REMINDER":
-        reply = reminder_handler(message, session, history=history)
+        reply = reminder_handler(message, session, history=history, system_prompt=system_prompt)
     else:
-        reply = query_handler(message, session, history=history)
+        reply = query_handler(message, session, history=history, system_prompt=system_prompt)
     
     # Save Assistant Reply to History
     chats.append_message(thread_id, "assistant", reply)
@@ -128,6 +147,30 @@ async def get_chat_thread(thread_id: str):
 async def delete_chat_thread(thread_id: str):
     chats.delete_thread(thread_id)
     return {"status": "success"}
+
+class ArchiveRequest(BaseModel):
+    client_id: str
+
+@app.post("/api/chats/{thread_id}/archive")
+async def archive_chat_endpoint(thread_id: str, req: ArchiveRequest):
+    try:
+        # First, try to treat req.client_id as the actual ID
+        target_client_id = req.client_id
+        if not target_client_id.startswith("CLT-"):
+             # It might be a name. Let's try to resolve it.
+             resolved_id = db.find_client_by_name_and_email(req.client_id)
+             if resolved_id:
+                 target_client_id = resolved_id
+             else:
+                 return {"status": "error", "message": f"Could not find client matching: {req.client_id}"}
+                 
+        success, extraction_data = archive_chat(thread_id, target_client_id)
+        if success:
+            return {"status": "success", "message": "Chat archived and memory updated.", "extraction": extraction_data}
+        else:
+            return {"status": "error", "message": "Failed to archive chat. Client not found or LLM error."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 class SendDocumentRequest(BaseModel):
     file_url: str

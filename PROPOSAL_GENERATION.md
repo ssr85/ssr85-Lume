@@ -62,6 +62,8 @@ PROPOSAL_PROMPT = """
 You are a professional proposal writer for a freelancer.
 Generate a complete, professional project proposal using the details below.
 
+**Context Awareness**: This prompt is augmented by the client's **Memory** and **Preferences** (e.g., " Sarah prefers minimal jargon"), ensuring the generated output aligns with the client's style.
+
 Match the tone to the project type:
 - Creative projects (design, content, branding): warm, expressive, client-focused
 - Technical projects (development, software, data): clear, structured, competency-focused

@@ -48,7 +48,7 @@ User Instructions:
 Respond with ONLY the full updated markdown content.
 """
 
-def proposal_handler(message: str, session: dict, history: list = None):
+def proposal_handler(message: str, session: dict, history: list = None, system_prompt: str = None):
     """Manages the proposal generation flow and editing loop."""
     from .intent import extract_fields
     
@@ -87,11 +87,14 @@ def proposal_handler(message: str, session: dict, history: list = None):
         session["pending_fields"] = ["client_email"]
         return f"Got it. I don't see **{client_name}** in your records. What's their email address so I can set them up?"
 
-    if not client_id and session["collected_fields"].get("client_email"):
+    if client_id:
+        session["selected_client_id"] = client_id
+    elif not client_id and session["collected_fields"].get("client_email"):
         client_id = db.get_or_create_client(
             name=client_name, 
             email=session["collected_fields"]["client_email"]
         )
+        session["selected_client_id"] = client_id
     elif client_id and session["collected_fields"].get("client_email"):
         # Update email if it was missing in DB
         client = db.get_client(client_id)
@@ -106,7 +109,7 @@ def proposal_handler(message: str, session: dict, history: list = None):
         new_content = call_llm(EDIT_PROMPT.format(
             content=session["draft_content"],
             instruction=message
-        ), history=history)
+        ), history=history, system_message=system_prompt)
         session["draft_content"] = new_content
     else:
         # Initial generation
@@ -115,7 +118,7 @@ def proposal_handler(message: str, session: dict, history: list = None):
             **session["collected_fields"],
             freelancer_background=session["collected_fields"].get("freelancer_background", "Highly experienced professional")
         )
-        session["draft_content"] = call_llm(prompt, history=history)
+        session["draft_content"] = call_llm(prompt, history=history, system_message=system_prompt)
         session["intent_reset"] = False
 
     # Save and return preview

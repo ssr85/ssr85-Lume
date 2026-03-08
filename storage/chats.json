@@ -1,5 +1,5 @@
 {
-  "current_id": 16,
+  "current_id": 17,
   "threads": {
     "thread_1": {
       "id": "thread_1",
@@ -1593,6 +1593,37 @@
         {
           "role": "assistant",
           "content": "Here is a list of all current clients:\n\n1. **Amit Singh**\n   - Email: sarabjit.rattan@gmail.com\n\n2. **Anmol**\n   - Email: kaloiya.anmol@gmail.com\n\n3. **Test Client**\n\n4. **Anmol Test**\n   - Email: anmol@test.com\n   - Company: StudioX\n   - Phone: 555-1234\n\n5. **Anmol Paid Test**\n   - Email: paid@test.com\n   - Company: StudioX\n   - Phone: 555-1234\n\n6. **Rishav**\n\n7. **SRI**\n   - Email: sarabjit.rattan@gmail.com\n\nIf you need to update any client information or proceed with a proposal or invoice, let me know!"
+        }
+      ]
+    },
+    "thread_17": {
+      "id": "thread_17",
+      "title": "list anmol and...",
+      "updated_at": "2026-03-07T10:11:13.231390Z",
+      "messages": [
+        {
+          "role": "user",
+          "content": "list anmol and files"
+        },
+        {
+          "role": "assistant",
+          "content": "Anmol is a client with the following details:\n\n- **Client ID**: CLT-1002\n- **Name**: Anmol\n- **Email**: kaloiya.anmol@gmail.com\n- **Proposals**:\n  - [Proposal for Logo Design](/docs/proposals/proposal_anmol_20260307_094501.pdf)\n- **Invoices**:\n  - [Invoice INV-1003](/docs/invoices/INV-1003.pdf) - Status: PAID\n  - [Invoice INV-1006](/docs/invoices/INV-1006.pdf) - Status: UNPAID\n  - [Invoice INV-1007](/docs/invoices/INV-1007.pdf) - Status: UNPAID\n\nWould you like to proceed with sending any of these documents to Anmol via email?"
+        },
+        {
+          "role": "user",
+          "content": "list all clients"
+        },
+        {
+          "role": "assistant",
+          "content": "Here are the clients currently in the system:\n\n1. **Amit Singh**\n   - Email: sarabjit.rattan@gmail.com\n\n2. **Anmol**\n   - Email: kaloiya.anmol@gmail.com\n\n3. **Test Client**\n   - Email: Not provided\n\n4. **Anmol Test**\n   - Email: anmol@test.com\n\n5. **Anmol Paid Test**\n   - Email: paid@test.com\n\n6. **Rishav**\n   - Email: Not provided\n\n7. **SRI**\n   - Email: sarabjit.rattan@gmail.com\n\nWould you like to proceed with any specific action for one of these clients, such as sending a proposal or invoice?"
+        },
+        {
+          "role": "user",
+          "content": "email for Anmol Paid Test is sarabjit.rattan@gmail.com"
+        },
+        {
+          "role": "assistant",
+          "content": "Anmol Paid Test is already added. I will update the email address to sarabjit.rattan@gmail.com.\n\nNow, let's proceed to the next step. Would you like to create a proposal or an invoice for Anmol Paid Test?"
         }
       ]
     }

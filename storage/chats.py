@@ -47,8 +47,14 @@ def delete_thread(thread_id: str):
         del data["threads"][thread_id]
         save_chats(data)
 
+def set_thread_archived(thread_id: str, archived: bool = True):
+    data = load_chats()
+    if thread_id in data["threads"]:
+        data["threads"][thread_id]["archived"] = archived
+        save_chats(data)
+
 def get_all_threads() -> list:
     data = load_chats()
     threads = list(data["threads"].values())
     threads.sort(key=lambda x: x["updated_at"], reverse=True)
-    return [{"id": t["id"], "title": t["title"], "updated_at": t["updated_at"]} for t in threads]
+    return [{"id": t["id"], "title": t["title"], "updated_at": t["updated_at"], "archived": t.get("archived", False)} for t in threads]

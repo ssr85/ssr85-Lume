@@ -69,7 +69,10 @@ def get_or_create_client(name: str, email: str = None, company: str = None, phon
         "created_at": datetime.now().isoformat(),
         "projects": [],
         "proposals": [],
-        "invoices": []
+        "invoices": [],
+        "archived_chats": [],
+        "preferences": {},
+        "memory": ""
     }
     save_db(db)
     return client_id

@@ -38,7 +38,7 @@ def get_tone(due_date: str) -> str:
     if overdue <= 21: return "firm"
     return "urgent"
 
-def reminder_handler(message: str, session: dict, history: list = None):
+def reminder_handler(message: str, session: dict, history: list = None, system_prompt: str = None):
     """Handles payment reminder generation and confirmation flow."""
     from .intent import extract_fields
     msg_low = message.lower().strip()
@@ -96,6 +96,7 @@ def reminder_handler(message: str, session: dict, history: list = None):
         return f"I couldn't find a client named '{client_name}'."
         
     client = db.get_client(client_id)
+    session["selected_client_id"] = client_id
     unpaid_invoices = [inv for inv in client.get("invoices", []) if inv["status"] != "PAID"]
     
     if not unpaid_invoices:
@@ -116,7 +117,7 @@ def reminder_handler(message: str, session: dict, history: list = None):
         days_overdue=(datetime.now() - datetime.strptime(invoice["due_date"], "%Y-%m-%d")).days,
         freelancer_name=os.getenv("FREELANCER_NAME", "your assistant")
     )
-    draft = call_llm(prompt)
+    draft = call_llm(prompt, system_message=system_prompt)
     session["draft_reminder"] = draft
     session["target_client_email"] = client["email"]
     session["target_attachment_path"] = invoice.get("file_path", f"documents/invoices/{invoice['invoice_number']}.pdf")

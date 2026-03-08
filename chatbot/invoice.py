@@ -37,7 +37,7 @@ def calculate_invoice(items: list, tax_percent: float = 0) -> dict:
         "total_pending": grand_total
     }
 
-def invoice_handler(message: str, session: dict, history: list = None):
+def invoice_handler(message: str, session: dict, history: list = None, system_prompt: str = None):
     """Handles the invoice creation flow, including field collection and calculations."""
     from .intent import extract_fields
     
@@ -95,11 +95,14 @@ def invoice_handler(message: str, session: dict, history: list = None):
     if not client_id and not session["collected_fields"].get("client_email"):
         return f"I see **{client_name}** is a new client. What's their email address so I can set them up?"
 
-    if not client_id and session["collected_fields"].get("client_email"):
+    if client_id:
+        session["selected_client_id"] = client_id
+    elif not client_id and session["collected_fields"].get("client_email"):
         client_id = db.get_or_create_client(
             name=client_name,
             email=session["collected_fields"]["client_email"]
         )
+        session["selected_client_id"] = client_id
     elif client_id and session["collected_fields"].get("client_email"):
         # Update email if it was missing in DB
         client = db.get_client(client_id)
@@ -146,7 +149,7 @@ def invoice_handler(message: str, session: dict, history: list = None):
         expand_prompt = (f"Write a professional, detailed 1-2 sentence description for this invoice line item. "
                          f"Project: {proj_name}. Notes: {raw_desc}. "
                          f"CRITICAL: Respond ONLY with the description text. Do NOT include any conversational filler, greetings, or next steps recommendations.")
-        detailed_desc = call_llm(expand_prompt).strip()
+        detailed_desc = call_llm(expand_prompt, system_message=system_prompt).strip()
         # Clean up stray quotes if the LLM adds them
         if detailed_desc.startswith('"') and detailed_desc.endswith('"'):
             detailed_desc = detailed_desc[1:-1]

@@ -98,9 +98,10 @@ An invoice automatically becomes `OVERDUE` when status is still `UNPAID` and tod
 
 ---
 
-## Invoice PDF Layout
-
 Generated using **ReportLab**. The invoice must include:
+
+> [!TIP]
+> Line item descriptions are expanded using the LLM, which now leverages **Client Memory** (injected into the session) to ensure terminology matches the client's preference.
 
 ```
 +-------------------------------------------------------+

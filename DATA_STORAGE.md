@@ -32,6 +32,18 @@ The entire data store is structured around clients. Each client contains their p
       "email": "contact@peakform.com",
       "company": "PeakForm Ltd",
       "phone": "+1 555 000 1234",
+      "memory": "Client prefers weekend emails; sensitive to technical jargon.",
+      "preferences": {
+        "tone": "formal",
+        "preferred_contact_method": "email"
+      },
+      "archived_chats": [
+        {
+          "timestamp": "2026-03-07T10:00:00",
+          "thread_id": "thread_abc123",
+          "summary": "Discussed Q1 branding needs and updated contact phone."
+        }
+      ],
       "created_at": "2026-02-01T10:00:00",
       "projects": [
         {
@@ -181,6 +193,9 @@ def log_reminder(client_name: str, invoice_number: str, log_entry: dict):
 | **Proposals** | Full proposal text, linked client and project, file path |
 | **Invoices** | All fields, line items, totals, due date, status, reminders sent |
 | **Payment Reminders** | Sent timestamp, tone, recipient, subject, days overdue at send |
+| **Client Memory** | Unstructured rules (e.g., "Always use formal tone") |
+| **Preferences** | Structured key-value pairs (e.g., `{"tone": "formal"}`) |
+| **Archived Chats** | Interaction summaries and historical thread IDs |
 
 ---
 
